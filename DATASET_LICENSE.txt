@@ -1,0 +1,16 @@
+Dataset License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+The processed dataset (CSV summaries, figures, and run artifacts) in this repository
+is made available under the terms of the Creative Commons Attribution 4.0 International
+license.
+
+Full license: https://creativecommons.org/licenses/by/4.0/
+
+Summary: You are free to Share and Adapt the material for any purpose, even
+commercially, as long as you provide appropriate credit, indicate if changes were
+made, and do not impose additional legal terms that restrict others from using the
+dataset under the same terms.
+
+Suggested attribution:
+El-Ghouchma, D., Benmenssour, M., Zytoune, O. (2026). UFRPLS VANET Results Dataset.
+GitHub repository. https://github.com/ELGHOUCHMADRISS/ufrpls-vanet-results

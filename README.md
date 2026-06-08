@@ -54,6 +54,11 @@ If you use this dataset, please cite our paper and this repository.
 
 Copyright (C) 2026 Driss El-Ghouchma, Mourad Benmenssour, Ouadoudi Zytoune
 
-This project is licensed under the GNU General Public License v3.0.
+The processed dataset, figures, and CSV summaries in this repository are released
+under Creative Commons Attribution 4.0 International (CC BY 4.0).
+See `DATASET_LICENSE.txt` for details.
+https://creativecommons.org/licenses/by/4.0/
+
+Simulation source code (if published) is licensed under GNU General Public License v3.0.
 See the [LICENSE](LICENSE) file for details.
 https://www.gnu.org/licenses/gpl-3.0.html
