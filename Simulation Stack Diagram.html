@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VANET Diagram and Report</title>
+<style>
+  :root {
+    --bg: #080808;
+    --text: #f2f2f2;
+    --muted: #c8c8c8;
+    --line: #d8d8d8;
+
+    --sumo: #106b57;
+    --veins: #433f9a;
+    --omnet: #1c4f86;
+    --inet: #8f3518;
+    --code: #8d5a00;
+    --real: #2f6f11;
+
+    --matlab: #4f4f4f;
+    --bound: #9f2c2c;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    line-height: 1.4;
+  }
+
+  .container {
+    width: min(1200px, 95vw);
+    margin: 0 auto;
+    padding: 24px 16px 28px;
+  }
+
+  h1 {
+    margin: 0 0 18px;
+    font-size: clamp(1.2rem, 2.5vw, 1.9rem);
+    text-align: center;
+    letter-spacing: 0.4px;
+  }
+
+  .diagram-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+  }
+
+  .column-title {
+    text-align: center;
+    font-size: 1.55rem;
+    font-weight: 700;
+    margin: 4px 0 12px;
+  }
+
+  .stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .box {
+    width: min(460px, 100%);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    padding: 14px 16px 12px;
+    text-align: center;
+    box-shadow: 0 7px 20px rgba(0, 0, 0, 0.25);
+  }
+
+  .box .title {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.05;
+  }
+
+  .box .sub {
+    margin-top: 6px;
+    color: #d5d5d5;
+    font-size: 1.35rem;
+    line-height: 1.2;
+  }
+
+  .box.slim .title { font-size: 1.9rem; }
+  .box.slim .sub { font-size: 1.2rem; }
+
+  .sumo { background: var(--sumo); }
+  .veins { background: var(--veins); }
+  .omnet { background: var(--omnet); }
+  .matlab { background: var(--matlab); }
+  .bound { background: var(--bound); }
+  .real { background: var(--real); }
+
+  .arrow-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .arrow-label {
+    color: #f0f0f0;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  .arrow {
+    width: 0;
+    height: 0;
+    border-left: 9px solid transparent;
+    border-right: 9px solid transparent;
+    border-top: 14px solid #f5f5f5;
+  }
+
+  .omnet-children {
+    width: min(460px, 100%);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 4px;
+  }
+
+  .mini {
+    border-radius: 11px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    padding: 13px 8px;
+    text-align: center;
+    min-height: 106px;
+  }
+
+  .mini .title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .mini .sub {
+    margin-top: 6px;
+    font-size: 1.28rem;
+    color: #e4e4e4;
+    line-height: 1.2;
+  }
+
+  .mini.inet { background: var(--inet); }
+  .mini.code { background: var(--code); }
+
+  .divider {
+    margin: 22px 0 18px;
+    border: 0;
+    border-top: 4px solid var(--line);
+    opacity: 0.95;
+  }
+
+  .differences {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .differences h3 {
+    margin: 0 0 6px;
+    font-size: 2rem;
+    text-align: center;
+  }
+
+  .differences ul {
+    margin: 0;
+    padding-left: 26px;
+    font-size: 1.5rem;
+    line-height: 1.38;
+  }
+
+  .vline {
+    width: 3px;
+    background: var(--line);
+    height: 100%;
+    min-height: 190px;
+  }
+
+  .report-head {
+    margin-top: 28px;
+    margin-bottom: 10px;
+    font-size: 1.55rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .report-wrap {
+    border: 1px solid #4c4c4c;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #111;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
+  }
+
+  iframe {
+    width: 100%;
+    height: 80vh;
+    min-height: 650px;
+    border: 0;
+    background: #fff;
+  }
+
+  .note {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin-top: 10px;
+    text-align: center;
+  }
+
+  @media (max-width: 1000px) {
+    .diagram-grid { grid-template-columns: 1fr; }
+    .differences { grid-template-columns: 1fr; }
+    .vline { display: none; }
+    .box .title, .mini .title { font-size: 1.6rem; }
+    .box .sub, .mini .sub { font-size: 1rem; }
+    .arrow-label { font-size: 1rem; }
+    .differences h3 { font-size: 1.4rem; }
+    .differences ul { font-size: 1rem; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Simulation Stack Diagram</h1>
+
+    <div class="diagram-grid">
+      <section>
+        <div class="column-title">Our simulation stack</div>
+        <div class="stack">
+          <div class="box slim sumo">
+            <div class="title">SUMO</div>
+            <div class="sub">Simulation of Urban Mobility</div>
+          </div>
+
+          <div class="arrow-wrap">
+            <div class="arrow-label">vehicle positions</div>
+            <div class="arrow"></div>
+          </div>
+
+          <div class="box slim veins">
+            <div class="title">Veins</div>
+            <div class="sub">Bridge: SUMO ↔ OMNeT++</div>
+          </div>
+
+          <div class="arrow-wrap">
+            <div class="arrow-label">mobility events</div>
+            <div class="arrow"></div>
+          </div>
+
+          <div class="box omnet">
+            <div class="title">OMNeT++</div>
+            <div class="sub">Discrete event simulator</div>
+            <div class="omnet-children">
+              <div class="mini inet">
+                <div class="title">INET</div>
+                <div class="sub">UDP/IP/MAC stack + radio</div>
+              </div>
+              <div class="mini code">
+                <div class="title">Our code</div>
+                <div class="sub">GPSRCS<br>UFRPLS</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="arrow-wrap">
+            <div class="arrow"></div>
+          </div>
+
+          <div class="box slim real">
+            <div class="title">Real packet routing results</div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="column-title">MATLAB approach (paper)</div>
+        <div class="stack">
+          <div class="box slim matlab">
+            <div class="title">Mathematical model</div>
+            <div class="sub">formulas only, no real routing</div>
+          </div>
+
+          <div class="arrow-wrap"><div class="arrow"></div></div>
+
+          <div class="box slim matlab">
+            <div class="title">Monte Carlo loop</div>
+            <div class="sub">1000 random position draws</div>
+          </div>
+
+          <div class="arrow-wrap"><div class="arrow"></div></div>
+
+          <div class="box slim matlab">
+            <div class="title">Compute CS per sample</div>
+            <div class="sub">CS = max(C_ij - C_ie, 0)</div>
+          </div>
+
+          <div class="arrow-wrap"><div class="arrow"></div></div>
+
+          <div class="box slim matlab">
+            <div class="title">Average over 1000 samples</div>
+            <div class="sub">no real packets, no routing</div>
+          </div>
+
+          <div class="arrow-wrap"><div class="arrow"></div></div>
+
+          <div class="box slim bound">
+            <div class="title">Theoretical bound only</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <hr class="divider">
+
+    <section class="differences">
+      <div>
+        <h3>Our approach</h3>
+        <ul>
+          <li>Real vehicle mobility (SUMO)</li>
+          <li>Real packets forwarded</li>
+          <li>Measures PDR, delay, hops</li>
+          <li>Closer to real deployment</li>
+        </ul>
+      </div>
+
+      <div class="vline"></div>
+
+      <div>
+        <h3>MATLAB / paper</h3>
+        <ul>
+          <li>Random positions (uniform)</li>
+          <li>No packets, formulas only</li>
+          <li>Measures CS average only</li>
+          <li>Theoretical upper bound</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

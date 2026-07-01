@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VANET Simulation Workflow Report</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg:        #0d1117;
+    --bg2:       #161b22;
+    --bg3:       #21262d;
+    --border:    #30363d;
+    --text:      #c9d1d9;
+    --text-dim:  #8b949e;
+    --accent:    #58a6ff;
+    --accent2:   #3fb950;
+    --accent3:   #f78166;
+    --accent4:   #d29922;
+    --purple:    #bc8cff;
+    --cyan:      #39c5cf;
+    --sidebar-w: 260px;
+    --font-mono: "JetBrains Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.7;
+    display: flex;
+  }
+
+  /* ── SIDEBAR ── */
+  nav#sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 20px 0 40px;
+    z-index: 100;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  nav#sidebar::-webkit-scrollbar { width: 4px; }
+  nav#sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .nav-brand {
+    padding: 0 16px 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .nav-brand h2 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .nav-brand p {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 3px;
+  }
+
+  nav#sidebar ul { list-style: none; }
+  nav#sidebar li a {
+    display: block;
+    padding: 5px 16px;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+  }
+  nav#sidebar li a:hover,
+  nav#sidebar li a.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(88,166,255,0.06);
+  }
+  nav#sidebar li.nav-section > a {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 13px;
+    margin-top: 10px;
+    padding-top: 8px;
+  }
+  nav#sidebar li.nav-sub > a { padding-left: 28px; font-size: 12px; }
+
+  /* ── MAIN CONTENT ── */
+  main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 48px 56px 96px;
+    max-width: calc(100vw - var(--sidebar-w));
+  }
+
+  /* ── HEADER ── */
+  .doc-header {
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .doc-header .badge-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .badge-blue   { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .badge-green  { background: rgba(63,185,80,0.15);  color: var(--accent2); }
+  .badge-orange { background: rgba(210,153,34,0.15); color: var(--accent4); }
+  .badge-red    { background: rgba(247,129,102,0.15); color: var(--accent3); }
+  .badge-purple { background: rgba(188,140,255,0.15); color: var(--purple); }
+
+  h1 { font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 8px; }
+  h2 { font-size: 1.45rem; font-weight: 700; color: #fff; margin: 48px 0 20px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.1rem; font-weight: 600; color: var(--accent); margin: 32px 0 12px; }
+  h4 { font-size: 0.95rem; font-weight: 600; color: var(--accent4); margin: 24px 0 10px; }
+  h5 { font-size: 0.9rem; font-weight: 600; color: var(--purple); margin: 16px 0 8px; }
+
+  p { margin: 10px 0; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── SECTION ANCHORS ── */
+  .section { margin-bottom: 64px; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .section-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .icon-blue   { background: rgba(88,166,255,0.15); }
+  .icon-green  { background: rgba(63,185,80,0.15); }
+  .icon-orange { background: rgba(210,153,34,0.15); }
+  .icon-red    { background: rgba(247,129,102,0.15); }
+  .icon-purple { background: rgba(188,140,255,0.15); }
+
+  /* ── TABLES ── */
+  .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 8px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th {
+    background: var(--bg3);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(88,166,255,0.04); }
+  tbody td { padding: 9px 14px; vertical-align: top; }
+  tbody td:first-child { font-family: var(--font-mono); font-size: 12.5px; color: var(--accent4); white-space: nowrap; }
+  td.mono { font-family: var(--font-mono); font-size: 12.5px; color: var(--accent4); }
+  td.val  { font-family: var(--font-mono); font-size: 12.5px; color: var(--accent2); }
+  td.note { color: var(--text-dim); font-size: 13px; }
+
+  /* ── CODE BLOCKS ── */
+  pre {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    margin: 16px 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  pre code { color: var(--text); }
+  code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: rgba(110,118,129,0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent4);
+  }
+  pre code { background: none; padding: 0; border-radius: 0; color: inherit; }
+
+  /* ── SYNTAX HIGHLIGHT ── */
+  .kw  { color: var(--purple); }
+  .str { color: var(--accent2); }
+  .cm  { color: var(--text-dim); font-style: italic; }
+  .num { color: var(--cyan); }
+  .fn  { color: var(--accent); }
+
+  /* ── MERMAID ── */
+  .diagram-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    margin: 20px 0;
+    overflow-x: auto;
+    text-align: center;
+  }
+  .diagram-wrap .mermaid { display: inline-block; min-width: 300px; }
+
+  /* ── CALLOUT BOXES ── */
+  .callout {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-left: 4px solid;
+    font-size: 14px;
+  }
+  .callout-info    { background: rgba(88,166,255,0.08);  border-color: var(--accent);  }
+  .callout-success { background: rgba(63,185,80,0.08);   border-color: var(--accent2); }
+  .callout-warn    { background: rgba(210,153,34,0.08);  border-color: var(--accent4); }
+  .callout-danger  { background: rgba(247,129,102,0.08); border-color: var(--accent3); }
+  .callout strong  { display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* ── METRIC CARDS ── */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .metric-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .metric-card h5 { margin: 0 0 8px; font-size: 13px; color: var(--accent); }
+  .metric-card .signal  { font-family: var(--font-mono); font-size: 12px; color: var(--accent2); }
+  .metric-card .formula { font-family: var(--font-mono); font-size: 11.5px; color: var(--cyan); background: var(--bg3); border-radius: 4px; padding: 8px; margin: 8px 0; display: block; }
+  .metric-card .sca-key { font-family: var(--font-mono); font-size: 11px; color: var(--accent4); margin-top: 6px; }
+  .metric-card p { font-size: 13px; color: var(--text-dim); margin: 6px 0 0; }
+
+  /* ── CONFIG MATRIX ── */
+  .config-matrix {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .config-group {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .config-group h5 { color: var(--accent3); font-size: 13px; margin: 0 0 10px; }
+  .config-group ul { list-style: none; }
+  .config-group li {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .config-group li:last-child { border-bottom: none; }
+  .config-group li .count { color: var(--accent4); font-weight: 600; float: right; }
+
+  /* ── FILE CARDS ── */
+  .file-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .file-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .file-card .file-name {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent2);
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .file-card .file-path {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    background: var(--bg3);
+    border-radius: 4px;
+    padding: 6px 8px;
+    margin-bottom: 10px;
+    word-break: break-all;
+  }
+  .file-card ul { list-style: none; }
+  .file-card li {
+    font-size: 13px;
+    color: var(--text-dim);
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+  }
+  .file-card li:last-child { border-bottom: none; }
+  .file-card li::before { content: "→"; color: var(--accent); flex-shrink: 0; }
+
+  /* ── SUBMODULE TABLE ── */
+  .submod-table table tbody td:first-child { color: var(--accent2); }
+
+  /* ── PARAM TABLE ── */
+  .param-val { font-family: var(--font-mono); color: var(--cyan); font-size: 12.5px; }
+  .param-key { font-family: var(--font-mono); color: var(--accent4); font-size: 12.5px; }
+
+  /* ── SECTION TITLE VARIANTS ── */
+  .section h2 span.sec-num {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 13px;
+    color: var(--text-dim);
+    font-weight: 400;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* ── TOC HEADER ── */
+  .toc {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 32px 0;
+  }
+  .toc h4 { color: var(--text); margin: 0 0 12px; font-size: 14px; }
+  .toc ol { padding-left: 20px; }
+  .toc li { margin: 5px 0; }
+  .toc a { color: var(--text-dim); font-size: 14px; }
+  .toc a:hover { color: var(--accent); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="nav-brand">
+    <h2>Simulation Report</h2>
+    <p>UFRPLS vs. GPSRCS — Chai et al. 2023</p>
+  </div>
+  <ul>
+    <li class="nav-section"><a href="#s1">1. Network Topology</a></li>
+    <li class="nav-sub"><a href="#s1-overview">1.1 Overview</a></li>
+    <li class="nav-sub"><a href="#s1-params">1.2 Parameters</a></li>
+    <li class="nav-sub"><a href="#s1-submodules">1.3 Submodules</a></li>
+    <li class="nav-sub"><a href="#s1-car">1.4 Car Structure</a></li>
+    <li class="nav-sub"><a href="#s1-diagram">1.5 Diagram</a></li>
+
+    <li class="nav-section"><a href="#s2">2. Configuration Matrix</a></li>
+    <li class="nav-sub"><a href="#s2-structure">2.1 INI Structure</a></li>
+    <li class="nav-sub"><a href="#s2-general">2.2 General Params</a></li>
+    <li class="nav-sub"><a href="#s2-radio">2.3 Radio & PLS</a></li>
+    <li class="nav-sub"><a href="#s2-app">2.4 Application Layer</a></li>
+    <li class="nav-sub"><a href="#s2-configs">2.5 Config Taxonomy</a></li>
+    <li class="nav-sub"><a href="#s2-timing">2.6 Timing Adjustments</a></li>
+    <li class="nav-sub"><a href="#s2-roles">2.7 Vehicle Roles</a></li>
+
+    <li class="nav-section"><a href="#s3">3. Automation Logic</a></li>
+    <li class="nav-sub"><a href="#s3-paths">3.1 Paths</a></li>
+    <li class="nav-sub"><a href="#s3-configs">3.2 CONFIGS List</a></li>
+    <li class="nav-sub"><a href="#s3-sumo">3.3 SUMO Launch</a></li>
+    <li class="nav-sub"><a href="#s3-eav">3.4 Eavesdropper Position</a></li>
+    <li class="nav-sub"><a href="#s3-spaced">3.5 Spaced Positions Algo</a></li>
+    <li class="nav-sub"><a href="#s3-naming">3.6 Output Naming</a></li>
+    <li class="nav-sub"><a href="#s3-cmd">3.7 OMNeT++ Command</a></li>
+    <li class="nav-sub"><a href="#s3-loop">3.8 Main Loop</a></li>
+    <li class="nav-sub"><a href="#s3-cli">3.9 CLI Reference</a></li>
+
+    <li class="nav-section"><a href="#s4">4. Output Files</a></li>
+    <li class="nav-sub"><a href="#s4-sca">.sca Scalar File</a></li>
+    <li class="nav-sub"><a href="#s4-rt">.rt Routing Table</a></li>
+    <li class="nav-sub"><a href="#s4-manifest">Manifest CSV</a></li>
+    <li class="nav-sub"><a href="#s4-summary">Summary TXT</a></li>
+
+    <li class="nav-section"><a href="#s5">5. Metrics Location</a></li>
+    <li class="nav-sub"><a href="#s5-cs">Secrecy Capacity</a></li>
+    <li class="nav-sub"><a href="#s5-pdr">PDR</a></li>
+    <li class="nav-sub"><a href="#s5-delay">E2E Delay</a></li>
+    <li class="nav-sub"><a href="#s5-hops">Hop Count</a></li>
+    <li class="nav-sub"><a href="#s5-drops">Drop Causes</a></li>
+    <li class="nav-sub"><a href="#s5-map">Figure Mapping</a></li>
+  </ul>
+</nav>
+
+<!-- MAIN -->
+<main>
+  <div class="doc-header">
+    <div class="badge-row">
+      <span class="badge badge-blue">OMNeT++ 6.x</span>
+      <span class="badge badge-green">INET 4.x</span>
+      <span class="badge badge-orange">Veins 5.x</span>
+      <span class="badge badge-purple">SUMO 1.8</span>
+      <span class="badge badge-red">IEEE 802.11p</span>
+    </div>
+    <h1>VANET Simulation Workflow Report</h1>
+    <p style="color:var(--text-dim); margin-top:8px; font-size:15px;">
+      Project: <strong style="color:var(--text)">UFRPLS vs. GPSRCS</strong> — Physical Layer Security in Vehicular Networks<br>
+      Replication of <em>Chai et al., Electronics 2023</em> using OMNeT++ + INET + Veins + SUMO
+    </p>
+    <div class="toc">
+      <h4>Table of Contents</h4>
+      <ol>
+        <li><a href="#s1">Network Topology &amp; Architecture (<code>UFRPLSSim.ned</code>)</a></li>
+        <li><a href="#s2">Simulation Configuration Matrix (<code>omnetpp_5pos_full.ini</code>)</a></li>
+        <li><a href="#s3">Automation &amp; Execution Logic (<code>run_all_simulations_9.py</code>)</a></li>
+        <li><a href="#s4">Generated Output Files</a></li>
+        <li><a href="#s5">Core Project Metrics Location</a></li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- SECTION 1: NETWORK TOPOLOGY                          -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="section" id="s1">
+    <h2><span class="sec-num">§1</span> Network Topology &amp; Architecture</h2>
+    <p><strong>File:</strong> <code>simulations/vanet/ufrpls/UFRPLSSim.ned</code> (50 lines)</p>
+
+    <h3 id="s1-overview">1.1 Overview</h3>
+    <p>
+      <code>UFRPLSSim.ned</code> declares the single shared network topology used by every simulation configuration.
+      It is declared under OMNeT++ package <code>vanetsim.simulations.vanet.ufrpls</code> and every named
+      configuration in the <code>.ini</code> file sets <code>network = UFRPLSSim</code>.
+    </p>
+    <p>
+      The design is deliberately minimal: it provides only the structural scaffold (radio medium, mobility manager,
+      node placeholders), while the <code>.ini</code> file and SUMO supply all concrete parameters and vehicle trajectories.
+    </p>
+
+    <h3 id="s1-params">1.2 Network Parameters</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Unit</th><th>Purpose</th><th>ini Value</th></tr></thead>
+        <tbody>
+          <tr><td>playgroundSizeX</td><td>double</td><td>m</td><td>X-axis extent of physical area</td><td class="val">2000</td></tr>
+          <tr><td>playgroundSizeY</td><td>double</td><td>m</td><td>Y-axis extent</td><td class="val">500</td></tr>
+          <tr><td>playgroundSizeZ</td><td>double</td><td>m</td><td>Z-axis ceiling (height)</td><td class="val">50</td></tr>
+          <tr><td>radioMediumType</td><td>string</td><td>—</td><td>Runtime-polymorphic radio medium class</td><td class="val">"Ieee80211ScalarRadioMedium"</td></tr>
+          <tr><td>numberOfRSU</td><td>int</td><td>—</td><td>Road Side Unit count</td><td class="val">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s1-submodules">1.3 Submodule Inventory</h3>
+    <div class="table-wrap submod-table">
+      <table>
+        <thead><tr><th>Name</th><th>Type</th><th>Role</th><th>Active Instances</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>manager</td>
+            <td class="note">VeinsInetManager</td>
+            <td class="note">SUMO↔OMNeT++ TraCI bridge. Dynamically creates/destroys <code>vehicle[N]</code> modules as SUMO inserts/removes cars. Polls SUMO every 0.1 s for position updates.</td>
+            <td class="val">1</td>
+          </tr>
+          <tr>
+            <td>radioMedium</td>
+            <td class="note">&lt;radioMediumType&gt; like IRadioMedium</td>
+            <td class="note">Polymorphic radio environment. Resolves to <code>Ieee80211ScalarRadioMedium</code>. Handles free-space path loss, communication/interference range enforcement, and SINR computation for all vehicles.</td>
+            <td class="val">1</td>
+          </tr>
+          <tr>
+            <td>routingTableRecorder</td>
+            <td class="note">RoutingTableRecorder</td>
+            <td class="note">Writes routing table change events (add/remove/modify) to a <code>.rt</code> file for debugging. Not used directly in metric extraction.</td>
+            <td class="val">1</td>
+          </tr>
+          <tr>
+            <td>rsu[numberOfRSU]</td>
+            <td class="note">RSU</td>
+            <td class="note">Road Side Units. Unused in all active configurations (<code>*.numberOfRSU = 0</code>). Present for future infrastructure scenarios.</td>
+            <td class="val">0</td>
+          </tr>
+          <tr>
+            <td>vehicle[0]</td>
+            <td class="note">Car</td>
+            <td class="note">Structural NED seed required before VeinsInetManager can dynamically grow the array. At runtime VeinsInetManager populates vehicle[0..N-1]. vehicle[0] is always designated the eavesdropper.</td>
+            <td class="val">→ N (dynamic)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-info">
+      <strong>Why <code>connections allowunconnected</code>?</strong>
+      All inter-node communication is wireless. INET WLAN radios connect to <code>radioMedium</code> through INET's
+      internal registry mechanism, not explicit NED gate connections. The keyword suppresses OMNeT++'s "unconnected gate" warnings.
+    </div>
+
+    <h3 id="s1-car">1.4 Car Module Internal Structure</h3>
+    <pre><code><span class="cm">// Each vehicle[i] is a Car containing:</span>
+Car
+├── mobility      : VeinsInetMobility    <span class="cm">// receives TraCI position updates every 0.1s</span>
+├── wlan[0]       : Ieee80211Interface   <span class="cm">// IEEE 802.11p radio</span>
+│   ├── mac       : Ieee80211Mac (DCF, cwMin=7)
+│   └── radio     : Ieee80211ScalarRadio (5.9GHz, 10mW, BW=10MHz)
+├── ipv4          : Ipv4NetworkLayer
+│   ├── configurator : HostAutoConfigurator (auto-IP on wlan0)
+│   └── routingTable : Ipv4RoutingTable
+├── routing       : &lt;router&gt; like IApp   <span class="cm">// UFRPLS or GPSRCS (**.router in ini)</span>
+│   ├── socketIn  ← UDP socket
+│   └── socketOut → UDP socket
+└── app[0]        : UdpBasicApp / UdpSink  <span class="cm">// vehicle[1] / vehicle[N-1] only</span></code></pre>
+
+    <h3 id="s1-diagram">1.5 Network Architecture Diagram</h3>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+graph TB
+    subgraph UFRPLSSim["UFRPLSSim  —  OMNeT++ Network"]
+        direction TB
+        MGR["manager\nVeinsInetManager\n(TraCI client · port 9999)"]
+        RM["radioMedium\nIee80211ScalarRadioMedium\n(5.9 GHz · 10mW · 200m range)"]
+        RTR["routingTableRecorder\n(→ .rt file)"]
+        V0["vehicle[0] · Car\nEavesdropper\nisEavesdropper=true"]
+        V1["vehicle[1] · Car\nSource\nUdpBasicApp 512B@0.25s"]
+        VM["vehicle[2..N-2] · Car\nRelay Nodes\nUFRPLS or GPSRCS routing"]
+        VN["vehicle[N-1] · Car\nSink\nUdpSink port 5000"]
+    end
+    SUMO["SUMO Traffic Simulator\n(mobility engine)"]
+    LD["sumo-launchd.py\n(TraCI bridge · port 9999)"]
+    SUMO -->|vehicle positions| LD
+    LD -->|TraCI TCP| MGR
+    MGR -->|creates & moves| V0
+    MGR -->|creates & moves| V1
+    MGR -->|creates & moves| VM
+    MGR -->|creates & moves| VN
+    V0 -. "beacons / passive" .-> RM
+    V1 -. "data + beacons" .-> RM
+    VM -. "forward + beacons" .-> RM
+    VN -. "beacons" .-> RM
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- SECTION 2: CONFIGURATION MATRIX                      -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="section" id="s2">
+    <h2><span class="sec-num">§2</span> Simulation Configuration Matrix</h2>
+    <p><strong>File:</strong> <code>simulations/vanet/ufrpls/omnetpp_5pos_full.ini</code> (804 lines)</p>
+
+    <h3 id="s2-structure">2.1 INI File Structure</h3>
+    <p>OMNeT++'s <code>extends</code> inheritance keeps the file DRY: each leaf config changes
+    only the parameter it varies, inheriting everything else from its base.</p>
+    <pre><code>[General]
+    ├── [Config GPSRCS-{N}veh]              <span class="cm">← GPSRCS, slow speed</span>
+    │       └── [Config GPSRCS-{N}veh-fast] <span class="cm">← extends, swaps SUMO map + timing</span>
+    ├── [Config UFRPLS-Base-{N}veh]         <span class="cm">← UFRPLS slow base (α=0.5 default)</span>
+    │       └── [Config UFRPLS-{N}veh-a{XX}] <span class="cm">← extends, sets α only</span>
+    └── [Config UFRPLS-Base-{N}veh-fast]    <span class="cm">← UFRPLS fast base</span>
+            └── [Config UFRPLS-{N}veh-a{XX}-fast]</code></pre>
+
+    <h3 id="s2-general">2.2 Global [General] Parameters</h3>
+
+    <h4>Simulation Control</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Parameter</th><th>Value</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>sim-time-limit</td><td class="val">261s</td><td class="note">Default total sim time (overridden for fast configs)</td></tr>
+          <tr><td>cmdenv-express-mode</td><td class="val">true</td><td class="note">Suppress per-event console log for speed</td></tr>
+          <tr><td>cmdenv-status-frequency</td><td class="val">1s</td><td class="note">Progress line every simulation second</td></tr>
+          <tr><td>**.scalar-recording</td><td class="val">true</td><td class="note">All @statistic scalars written to .sca</td></tr>
+          <tr><td>**.vector-recording</td><td class="val">false</td><td class="note">No per-event time series (saves disk / processing time)</td></tr>
+          <tr><td>num-rngs</td><td class="val">3</td><td class="note">Three independent RNG streams</td></tr>
+          <tr><td>playgroundSizeX/Y/Z</td><td class="val">2000/500/50 m</td><td class="note">Physical area (passed to UFRPLSSim NED params)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>VeinsInetManager</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ini Key</th><th>Value</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>*.manager.updateInterval</td><td class="val">0.1s</td><td class="note">TraCI poll rate — 10 position updates/second</td></tr>
+          <tr><td>*.manager.host</td><td class="val">"localhost"</td><td class="note">sumo-launchd.py address</td></tr>
+          <tr><td>*.manager.port</td><td class="val">9999</td><td class="note">Must match LAUNCHD_PORT in Python script</td></tr>
+          <tr><td>*.manager.autoShutdown</td><td class="val">true</td><td class="note">End OMNeT++ simulation when SUMO scenario ends</td></tr>
+          <tr><td>*.manager.moduleType</td><td class="val">"vanetsim…Car"</td><td class="note">Class instantiated for each new SUMO vehicle</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>Mobility Constraint Area</h4>
+    <pre><code>*.vehicle[*].mobility.constraintAreaMinX = 0m
+*.vehicle[*].mobility.constraintAreaMaxX = 1000m    <span class="cm">// 1 km road segment</span>
+*.vehicle[*].mobility.constraintAreaMinY = -50m
+*.vehicle[*].mobility.constraintAreaMaxY =  50m     <span class="cm">// ±50 m lateral tolerance</span>
+*.vehicle[*].mobility.constraintAreaMinZ = 0m
+*.vehicle[*].mobility.constraintAreaMaxZ = 0m       <span class="cm">// flat 2D road</span></code></pre>
+
+    <h3 id="s2-radio">2.3 Radio &amp; PLS Parameters</h3>
+
+    <h4>IEEE 802.11p Radio (Chai et al. Table 2)</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Parameter</th><th>ini Key</th><th>Value</th><th>Standard</th></tr></thead>
+        <tbody>
+          <tr><td>Frequency band</td><td class="param-key">radio.bandName</td><td class="val">"5.9 GHz"</td><td class="note">DSRC / IEEE 802.11p</td></tr>
+          <tr><td>Channel</td><td class="param-key">radio.channelNumber</td><td class="val">3</td><td class="note">CCH (Control Channel)</td></tr>
+          <tr><td>Transmit power</td><td class="param-key">transmitter.power</td><td class="val">10 mW</td><td class="note">Chai Table 2</td></tr>
+          <tr><td>Bandwidth</td><td class="param-key">radio.bandwidth</td><td class="val">10 MHz</td><td class="note">802.11p</td></tr>
+          <tr><td>CSMA/CA min window</td><td class="param-key">mac.dcf.channelAccess.cwMin</td><td class="val">7</td><td class="note">802.11p DCF</td></tr>
+          <tr><td>Communication range</td><td class="param-key">transmitter.communicationRange</td><td class="val">200 m</td><td class="note">Chai Table 2</td></tr>
+          <tr><td>Receiver sensitivity</td><td class="param-key">radio.receiver.sensitivity</td><td class="val">−85 dBm</td><td class="note">Typical 802.11p</td></tr>
+          <tr><td>Interference range</td><td class="param-key">transmitter.interferenceRange</td><td class="val">100 m</td><td class="note">Simplified model</td></tr>
+          <tr><td>Ignore interference</td><td class="param-key">receiver.ignoreInterference</td><td class="val">true</td><td class="note">Simplified — no carrier sensing</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>Physical Layer Security Parameters</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Parameter</th><th>ini Key</th><th>Value</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>Routing weight α</td><td class="param-key">routing.alpha</td><td class="val">0.5</td><td class="note">CS vs. distance balance in UFRPLS utility: ε = CS^α × d^β</td></tr>
+          <tr><td>Transmit power Pt</td><td class="param-key">routing.transmitPower</td><td class="val">0.01 W</td><td class="note">Used in CS formula</td></tr>
+          <tr><td>Noise power σ²</td><td class="param-key">routing.noisePower</td><td class="val">3.981e-21 W</td><td class="note">Thermal noise at room temp, 10 MHz BW</td></tr>
+          <tr><td>Wavelength λ</td><td class="param-key">routing.wavelength</td><td class="val">0.05085 m</td><td class="note">c/f = 3×10⁸/5.9×10⁹</td></tr>
+          <tr><td>Initial wait tw₁</td><td class="param-key">routing.initialWaitWindow</td><td class="val">130 µs</td><td class="note">UFRPLS exponential backoff first window</td></tr>
+          <tr><td>Wait threshold T</td><td class="param-key">routing.waitThreshold</td><td class="val">65 ms</td><td class="note">UFRPLS max total wait before drop</td></tr>
+          <tr><td>Is eavesdropper</td><td class="param-key">routing.isEavesdropper</td><td class="val">false</td><td class="note">Default; overridden to true for vehicle[0]</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s2-app">2.4 Application Layer</h3>
+    <pre><code><span class="cm"># Sender — always vehicle[1]</span>
+*.vehicle[1].numApps = 1
+*.vehicle[1].app[0].typename      = <span class="str">"UdpBasicApp"</span>
+*.vehicle[1].app[0].destPort      = <span class="num">5000</span>
+*.vehicle[1].app[0].messageLength = <span class="num">512</span>B        <span class="cm">// 512-byte V2V data packets</span>
+*.vehicle[1].app[0].sendInterval  = <span class="num">0.25</span>s       <span class="cm">// 4 packets / second</span>
+*.vehicle[1].app[0].startTime     = <span class="num">10</span>s         <span class="cm">// warm-up period (all vehicles must spawn)</span>
+*.vehicle[1].app[0].stopTime      = <span class="num">260</span>s        <span class="cm">// 250 seconds active = 1000 packets total</span>
+
+<span class="cm"># Receiver — vehicle[N-1], set per config</span>
+*.vehicle[N-1].app[0].typename  = <span class="str">"UdpSink"</span>
+*.vehicle[N-1].app[0].localPort = <span class="num">5000</span></code></pre>
+
+    <div class="callout callout-success">
+      <strong>Packet Budget</strong>
+      Every configuration sends exactly <strong>1000 packets</strong> (250 s / 0.25 s interval). Fast configs maintain
+      this count by keeping app duration constant at 250 s while extending the overall <code>sim-time-limit</code>
+      to allow for the longer vehicle spawn warm-up period.
+    </div>
+
+    <h3 id="s2-configs">2.5 Configuration Taxonomy</h3>
+    <div class="config-matrix">
+      <div class="config-group">
+        <h5>GPSRCS — Slow (40–60 km/h)</h5>
+        <ul>
+          <li>GPSRCS-20veh <span class="count">1</span></li>
+          <li>GPSRCS-40veh <span class="count">1</span></li>
+          <li>GPSRCS-60veh <span class="count">1</span></li>
+          <li>GPSRCS-80veh <span class="count">1</span></li>
+          <li>GPSRCS-100veh <span class="count">1</span></li>
+        </ul>
+      </div>
+      <div class="config-group">
+        <h5>GPSRCS — Fast (80–120 km/h)</h5>
+        <ul>
+          <li>GPSRCS-20veh-fast <span class="count">1</span></li>
+          <li>GPSRCS-40veh-fast <span class="count">1</span></li>
+          <li>GPSRCS-60veh-fast <span class="count">1</span></li>
+          <li>GPSRCS-80veh-fast <span class="count">1</span></li>
+          <li>GPSRCS-100veh-fast <span class="count">1</span></li>
+        </ul>
+      </div>
+      <div class="config-group">
+        <h5>UFRPLS — Slow (40–60 km/h)</h5>
+        <ul>
+          <li>UFRPLS-{N}veh-a01 through a09 <span class="count">45</span></li>
+          <li>5 densities × 9 alpha values <span class="count">=45</span></li>
+        </ul>
+      </div>
+      <div class="config-group">
+        <h5>UFRPLS — Fast (80–120 km/h)</h5>
+        <ul>
+          <li>UFRPLS-{N}veh-a01 through a09-fast <span class="count">45</span></li>
+          <li>5 densities × 9 alpha values <span class="count">=45</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>Defined vs. Executed</strong>
+      The <code>.ini</code> defines <strong>100 configurations</strong> (10 GPSRCS + 45 UFRPLS slow + 45 UFRPLS fast).
+      The Python runner executes only <strong>50</strong>: all 10 GPSRCS, but only 5 alpha values for slow
+      (a01,a03,a05,a07,a09) and 3 for fast (a03,a05,a07). Remaining configs are available for targeted re-runs.
+    </div>
+
+    <h3 id="s2-timing">2.6 Timing Adjustments for Fast Configs</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Config</th><th>sim-time-limit</th><th>App startTime</th><th>App stopTime</th><th>Duration</th></tr></thead>
+        <tbody>
+          <tr><td>(all normal)</td><td class="val">261s</td><td class="val">10s</td><td class="val">260s</td><td class="val">250s</td></tr>
+          <tr><td>20veh-fast</td><td class="val">261s</td><td class="val">10s</td><td class="val">260s</td><td class="val">250s</td></tr>
+          <tr><td>40veh-fast</td><td class="val">284s</td><td class="val">33s</td><td class="val">283s</td><td class="val">250s</td></tr>
+          <tr><td>60veh-fast</td><td class="val">286s</td><td class="val">35s</td><td class="val">285s</td><td class="val">250s</td></tr>
+          <tr><td>80veh-fast</td><td class="val">296s</td><td class="val">45s</td><td class="val">295s</td><td class="val">250s</td></tr>
+          <tr><td>100veh-fast</td><td class="val">400s</td><td class="val">109s</td><td class="val">359s</td><td class="val">250s</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s2-roles">2.7 Vehicle Role Assignment</h3>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+graph LR
+    V0["vehicle[0]\nEavesdropper\nisEavesdropper=true\nPassive — degrades CS of nearby hops"]
+    V1["vehicle[1]\nSource\nUdpBasicApp\n1000 pkts × 512B\n10s – 260s"]
+    VM["vehicle[2..N-2]\nRelay Nodes\nRoute packets via\nUFRPLS or GPSRCS"]
+    VN["vehicle[N-1]\nSink\nUdpSink port 5000\nCounts received pkts"]
+    V1 -->|"UDP / 5000"| VM
+    VM -->|"forwarded"| VN
+    V0 -. "CS ↓ for nearby hops" .-> VM
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- SECTION 3: AUTOMATION LOGIC                          -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="section" id="s3">
+    <h2><span class="sec-num">§3</span> Automation &amp; Execution Logic</h2>
+    <p><strong>File:</strong> <code>simulations/run_all_simulations_9.py</code> (644 lines)</p>
+
+    <h3 id="s3-paths">3.1 Path Configuration</h3>
+    <pre><code>PYTHON2_EXE  = <span class="str">r"C:\...\omnetpp-5.6.2\tools\win64\mingw64\bin\python2.exe"</span>
+OPP_RUN_WIN  = <span class="str">r"C:\...\omnetpp-5.6.2\bin\opp_run_release.exe"</span>
+SIM_DIR_WIN  = <span class="str">r"C:\...\simulations\vanet\ufrpls"</span>
+LAUNCHD_PY   = <span class="str">r"C:\...\WorkSpaceVanet\veins\sumo-launchd.py"</span>
+SUMO_EXE     = <span class="str">r"C:\...\sumo-1.8.0\bin\sumo.exe"</span>
+LAUNCHD_PORT = <span class="num">9999</span>
+RESULTS_DIR  = SIM_DIR_WIN + <span class="str">r"\results"</span>
+MAPS_PLS_DIR = <span class="str">r"C:\...\WorkSpaceVanet\_maps\pls"</span>  <span class="cm">// SUMO route XMLs</span>
+
+NED_PATHS = <span class="cm">// 8 directories:</span>
+  VANETSim/simulations, VANETSim/src,
+  inet/src, inet/examples, inet/tutorials, inet/showcases,
+  veins/examples/veins, veins/src/veins</code></pre>
+
+    <h3 id="s3-configs">3.2 CONFIGS List Construction</h3>
+    <pre><code>speed_ranges = [<span class="str">""</span>, <span class="str">"-fast"</span>]
+alpha = [<span class="str">"a05"</span>, <span class="str">"a03"</span>, <span class="str">"a07"</span>, <span class="str">"a01"</span>, <span class="str">"a09"</span>]   <span class="cm">// α = 0.5, 0.3, 0.7, 0.1, 0.9</span>
+n     = [<span class="str">"20"</span>, <span class="str">"40"</span>, <span class="str">"60"</span>, <span class="str">"80"</span>, <span class="str">"100"</span>]
+
+CONFIGS = []
+<span class="kw">for</span> speed <span class="kw">in</span> speed_ranges:            <span class="cm">// first slow, then fast</span>
+    <span class="kw">for</span> veh <span class="kw">in</span> n:
+        CONFIGS.append(<span class="fn">f</span><span class="str">"GPSRCS-{veh}veh{speed}"</span>)
+    alpha_for_speed = [<span class="str">"a05"</span>,<span class="str">"a03"</span>,<span class="str">"a07"</span>] <span class="kw">if</span> speed == <span class="str">"-fast"</span> <span class="kw">else</span> alpha
+    <span class="kw">for</span> a <span class="kw">in</span> alpha_for_speed:
+        <span class="kw">for</span> veh <span class="kw">in</span> n:
+            CONFIGS.append(<span class="fn">f</span><span class="str">"UFRPLS-{veh}veh-{a}{speed}"</span>)</code></pre>
+
+    <p>The resulting 50-entry CONFIGS list executes in this order:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Configs</th><th>Protocol</th><th>Speed</th><th>Count</th></tr></thead>
+        <tbody>
+          <tr><td>1–5</td><td class="note">GPSRCS-{20,40,60,80,100}veh</td><td class="note">GPSRCS</td><td class="note">40–60 km/h</td><td class="val">5</td></tr>
+          <tr><td>6–10</td><td class="note">UFRPLS-{N}veh-a05</td><td class="note">UFRPLS</td><td class="note">40–60 km/h</td><td class="val">5</td></tr>
+          <tr><td>11–15</td><td class="note">UFRPLS-{N}veh-a03</td><td class="note">UFRPLS</td><td class="note">40–60 km/h</td><td class="val">5</td></tr>
+          <tr><td>16–20</td><td class="note">UFRPLS-{N}veh-a07</td><td class="note">UFRPLS</td><td class="note">40–60 km/h</td><td class="val">5</td></tr>
+          <tr><td>21–25</td><td class="note">UFRPLS-{N}veh-a01</td><td class="note">UFRPLS</td><td class="note">40–60 km/h</td><td class="val">5</td></tr>
+          <tr><td>26–30</td><td class="note">UFRPLS-{N}veh-a09</td><td class="note">UFRPLS</td><td class="note">40–60 km/h</td><td class="val">5</td></tr>
+          <tr><td>31–35</td><td class="note">GPSRCS-{N}veh-fast</td><td class="note">GPSRCS</td><td class="note">80–120 km/h</td><td class="val">5</td></tr>
+          <tr><td>36–40</td><td class="note">UFRPLS-{N}veh-a05-fast</td><td class="note">UFRPLS</td><td class="note">80–120 km/h</td><td class="val">5</td></tr>
+          <tr><td>41–45</td><td class="note">UFRPLS-{N}veh-a03-fast</td><td class="note">UFRPLS</td><td class="note">80–120 km/h</td><td class="val">5</td></tr>
+          <tr><td>46–50</td><td class="note">UFRPLS-{N}veh-a07-fast</td><td class="note">UFRPLS</td><td class="note">80–120 km/h</td><td class="val">5</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s3-sumo">3.3 SUMO Launch &amp; Failure Recovery</h3>
+    <pre><code><span class="kw">def</span> <span class="fn">start_launchd</span>():
+    cmd = [PYTHON2_EXE, LAUNCHD_PY, <span class="str">"-vv"</span>, <span class="str">"-c"</span>, SUMO_EXE, <span class="str">"--port"</span>, <span class="str">"9999"</span>]
+    proc = subprocess.Popen(cmd)
+    <span class="kw">if</span> <span class="fn">wait_for_port</span>(<span class="num">9999</span>, timeout=<span class="num">20</span>):   <span class="cm">// poll 0.5s intervals</span>
+        <span class="kw">return</span> proc       <span class="cm">// sumo-launchd ready to accept TraCI connections</span>
+    <span class="kw">return</span> None            <span class="cm">// abort batch if not up in 20s</span></code></pre>
+
+    <div class="callout callout-danger">
+      <strong>Failure Recovery</strong>
+      After any OMNeT++ run that returns a non-zero exit code, the script stops sumo-launchd, sleeps 2 seconds,
+      and restarts it. This is necessary because a SUMO crash leaves sumo-launchd.py in a broken state causing
+      <strong>WSAECONNRESET (10054)</strong> on the next TraCI connection attempt.
+    </div>
+
+    <h3 id="s3-eav">3.4 Eavesdropper Position Injection</h3>
+    <p>Vehicle[0] is the eavesdropper. Its road starting position (<code>departPos</code>) is set by
+    patching the SUMO route XML before each OMNeT++ run:</p>
+    <pre><code><span class="kw">def</span> <span class="fn">route_file_for_config</span>(config_name):
+    veh    = re.search(<span class="str">r"(?:UFRPLS|GPSRCS)-(\d+)veh"</span>, config_name).group(<span class="num">1</span>)
+    is_fast = config_name.endswith(<span class="str">"-fast"</span>)
+    speed  = <span class="str">"80-120kmh"</span> <span class="kw">if</span> is_fast <span class="kw">else</span> <span class="str">"40-60kmh"</span>
+    <span class="kw">return</span> MAPS_PLS_DIR + <span class="fn">f</span><span class="str">"/traffic_{veh}veh_{speed}_rou.xml"</span>
+
+<span class="kw">def</span> <span class="fn">set_eavesdropper_position</span>(route_file, new_pos):
+    pattern = re.compile(
+        <span class="str">r'(&lt;vehicle\s+id="vehicle00"[\s\S]*?departPos=")(\d+(?:\.\d+)?)(")' </span>
+    )
+    <span class="cm">// Replace departPos value; [\s\S]*? matches across newlines (dotall, non-greedy)</span>
+    new_content, count = pattern.subn(<span class="str">rf'\g&lt;1&gt;{round(new_pos,1)}\g&lt;3&gt;'</span>, content, count=<span class="num">1</span>)
+    <span class="kw">with</span> open(route_file, <span class="str">"w"</span>) <span class="kw">as</span> f: f.write(new_content)</code></pre>
+
+    <h3 id="s3-spaced">3.5 generate_spaced_eav_positions Algorithm</h3>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart TD
+    A([generate_spaced_eav_positions]) --> B{min_gap_m == 0?}
+    B -->|Yes| C[Random uniform, no spacing constraint\nShuffle result]
+    C --> Z([Return positions list])
+    B -->|No| D[Feasibility check\nmax_points = range ÷ gap + 1\nRaise ValueError if reps > max_points]
+    D --> E[Randomized sampling\n500 global restarts\n2000 local attempts per candidate\nAll-pairs min-gap check]
+    E --> F{All reps placed?}
+    F -->|Yes| G[Shuffle tail positions\nfixed_first stays at index 0]
+    G --> Z
+    F -->|No after 500 restarts| H{fixed_first provided?}
+    H -->|No| I[Raise ValueError]
+    H -->|Yes| J[Deterministic fallback\nplace at fixed_first ± n×gap\nalternating right/left]
+    J --> K{Enough positions?}
+    K -->|Yes| G
+    K -->|No| I
+      </div>
+    </div>
+    <p>Default usage with <code>--reps 5 --random-eav --baseline-first</code>:</p>
+    <pre><code>generate_spaced_eav_positions(reps=5, min_pos=100, max_pos=900, min_gap=200, fixed_first=500)
+<span class="cm">// Max feasible with 200m gap in [100,900]: 5 positions at 100, 300, 500, 700, 900</span>
+<span class="cm">// Result: [500, 300, 700, 100, 900] — 500 is rep1 baseline (always first)</span></code></pre>
+
+    <h3 id="s3-naming">3.6 Output File Naming</h3>
+    <pre><code><span class="fn">position_tag</span>(eav_pos) → <span class="str">"e{int(round(eav_pos))}"</span>  <span class="cm">// e.g. e500, e300, e700</span>
+                         → <span class="str">"e500"</span> if eav_pos is None  <span class="cm">// default / no position arg</span>
+
+scalar_file = <span class="fn">f</span><span class="str">"results/{config_name}-{pos_tag}-rep{rep}-#0.sca"</span>
+rt_file     = <span class="fn">f</span><span class="str">"results/{config_name}-{pos_tag}-rep{rep}.rt"</span>
+
+<span class="cm">// Example: UFRPLS-40veh-a05, rep=2, eav_pos=700</span>
+<span class="cm">//   → results/UFRPLS-40veh-a05-e700-rep2-#0.sca</span>
+<span class="cm">//   → results/UFRPLS-40veh-a05-e700-rep2.rt</span></code></pre>
+
+    <h3 id="s3-cmd">3.7 OMNeT++ Run Command</h3>
+    <pre><code>opp_run_release.exe
+    -u Cmdenv                                <span class="cm">// non-GUI mode</span>
+    -c UFRPLS-40veh-a05                      <span class="cm">// config name</span>
+    -r 0                                     <span class="cm">// always run index 0</span>
+    -n {NED_PATHS}                           <span class="cm">// 8 semicolon-separated dirs</span>
+    -l VANETSim                              <span class="cm">// load VANETSim.dll</span>
+    --cmdenv-express-mode=true
+    --cmdenv-status-frequency=30s
+    --output-scalar-file=results/UFRPLS-40veh-a05-e500-rep1-#0.sca
+    --seed-set=1                             <span class="cm">// seed = rep number (if --random-seed)</span>
+    omnetpp_5pos_full.ini
+cwd: SIM_DIR_WIN
+timeout: 3600s (1 hour)</span></code></pre>
+
+    <div class="callout callout-info">
+      <strong>Why always -r 0?</strong>
+      Each OMNeT++ configuration defines exactly one run. Position variation across repetitions is achieved by
+      modifying the SUMO route XML <em>before</em> each run, not by using multiple OMNeT++ run indices.
+      <code>--seed-set={rep}</code> varies the RNG seed for different topology randomisation per repetition.
+    </div>
+
+    <h3 id="s3-loop">3.8 Main Execution Loop</h3>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart TD
+    A([main]) --> B[Parse CLI args\nBuild to_run list]
+    B --> C[Create RESULTS_DIR\nInit manifest CSV]
+    C --> D[start_launchd on port 9999]
+    D --> E{--random-eav?}
+    E -->|Yes| F[generate_spaced_eav_positions\nfor ALL reps up-front]
+    F --> G
+    E -->|No| G[For rep in reps_to_run]
+    G --> H[seed = rep if --random-seed]
+    H --> I[For config in to_run]
+    I --> J{eav position\nneeded?}
+    J -->|Yes| K[set_eavesdropper_position\nin route XML]
+    K --> L
+    J -->|No| L{skip_existing and\n.sca file exists?}
+    L -->|Yes| M[Append SKIPPED to manifest\nsuccess++]
+    M --> I
+    L -->|No| N[run_omnet subprocess\ntimeout 3600s]
+    N --> O{returncode == 0?}
+    O -->|Yes| P[Append OK\nsuccess++]
+    P --> I
+    O -->|No| Q[Append FAIL\nRestart sumo-launchd]
+    Q --> I
+    G -->|no more reps| R[stop_launchd\nWrite run_summary.txt]
+    R --> S([Done])
+      </div>
+    </div>
+
+    <h3 id="s3-cli">3.9 CLI Reference</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Argument</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>--dry-run</td><td class="val">off</td><td class="note">Print commands without executing</td></tr>
+          <tr><td>--start N</td><td class="val">1</td><td class="note">Skip first N-1 entries in CONFIGS list</td></tr>
+          <tr><td>--config NAME[,NAME]</td><td class="val">all</td><td class="note">Run only specified config(s); comma-separated or repeated flag</td></tr>
+          <tr><td>--reps N</td><td class="val">1</td><td class="note">Number of repetitions per config</td></tr>
+          <tr><td>--rep-list 3,5</td><td class="val">—</td><td class="note">Explicit rep numbers to run (overrides --reps)</td></tr>
+          <tr><td>--random-eav</td><td class="val">off</td><td class="note">Randomize eavesdropper position across reps</td></tr>
+          <tr><td>--eav-pos V</td><td class="val">—</td><td class="note">Fixed eavesdropper position for all reps (m)</td></tr>
+          <tr><td>--eav-min V</td><td class="val">100.0</td><td class="note">Lower bound of eavesdropper range (m)</td></tr>
+          <tr><td>--eav-max V</td><td class="val">900.0</td><td class="note">Upper bound of eavesdropper range (m)</td></tr>
+          <tr><td>--eav-min-gap V</td><td class="val">200.0</td><td class="note">Minimum spacing between rep positions (m)</td></tr>
+          <tr><td>--baseline-first</td><td class="val">on</td><td class="note">rep1 always uses --baseline-eav-pos (500m)</td></tr>
+          <tr><td>--baseline-eav-pos V</td><td class="val">500.0</td><td class="note">Baseline position for rep1 with --baseline-first</td></tr>
+          <tr><td>--random-seed</td><td class="val">on</td><td class="note">Set OMNeT++ seed = rep number for reproducibility</td></tr>
+          <tr><td>--skip-existing</td><td class="val">on</td><td class="note">Skip run if .sca file already exists (safe resume)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- SECTION 4: OUTPUT FILES                              -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="section" id="s4">
+    <h2><span class="sec-num">§4</span> Generated Output Files</h2>
+
+    <div class="file-grid">
+      <div class="file-card" id="s4-sca">
+        <div class="file-name">📊 Scalar Result File (.sca)</div>
+        <div class="file-path">results/{config}-{pos_tag}-rep{N}-#0.sca</div>
+        <ul>
+          <li>Primary metric source for all paper figures</li>
+          <li>OMNeT++ text format: one scalar per line</li>
+          <li>Contains all @statistic record=mean/max/min values</li>
+          <li>Produced once per OMNeT++ run (run index 0)</li>
+          <li>-#0 suffix = OMNeT++ run index 0 convention</li>
+          <li>Size: 50–200 KB per run</li>
+        </ul>
+      </div>
+      <div class="file-card" id="s4-rt">
+        <div class="file-name">🗺️ Routing Table File (.rt)</div>
+        <div class="file-path">results/{config}-{pos_tag}-rep{N}.rt</div>
+        <ul>
+          <li>INET RoutingTableRecorder plain-text log</li>
+          <li>One entry per routing table change event</li>
+          <li>Format: time, module, event, dest/mask, gw, iface, metric</li>
+          <li>Useful for topology/forwarding debugging</li>
+          <li>Not used directly for paper metric extraction</li>
+        </ul>
+      </div>
+      <div class="file-card" id="s4-manifest">
+        <div class="file-name">📋 Run Manifest (run_manifest.csv)</div>
+        <div class="file-path">results/run_manifest.csv</div>
+        <ul>
+          <li>CSV: timestamp,rep,config,eav_pos_m,seed,status,scalar_file</li>
+          <li>Appended after every run (OK, FAIL, or SKIPPED)</li>
+          <li>Created on first run with header row</li>
+          <li>Links experimental conditions to .sca file paths</li>
+          <li>Primary index for post-processing scripts</li>
+        </ul>
+      </div>
+      <div class="file-card" id="s4-summary">
+        <div class="file-name">📝 Run Summary (run_summary.txt)</div>
+        <div class="file-path">results/run_summary.txt</div>
+        <ul>
+          <li>Human-readable batch completion summary</li>
+          <li>Fields: date, total time, success/total count, failed list</li>
+          <li>Overwritten at end of each complete batch run</li>
+          <li>Quick health check — use manifest CSV for analysis</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Scalar File Format Example</h3>
+    <pre><code>version 2
+run UFRPLS-40veh-a05-0-20240115-143211-12345
+attr configname UFRPLS-40veh-a05
+attr datetime 2024-01-15T14:32:11
+attr seedset 1
+attr experiment UFRPLS-40veh-a05
+
+scalar UFRPLSSim.vehicle[2].routing secrecyCapacity:mean    1.234567
+scalar UFRPLSSim.vehicle[2].routing secrecyCapacity:max     3.456789
+scalar UFRPLSSim.vehicle[2].routing secrecyCapacity:min     0.000000
+scalar UFRPLSSim.vehicle[2].routing endToEndDelay:mean      0.002345
+scalar UFRPLSSim.vehicle[2].routing totalHops               4321
+scalar UFRPLSSim.vehicle[2].routing secureHops              3890
+scalar UFRPLSSim.vehicle[2].routing secureHopRatio          0.9003
+scalar UFRPLSSim.vehicle[2].routing globalEavesdropperCount 1
+scalar UFRPLSSim.vehicle[1].app[0]   packetSent:count       1000
+scalar UFRPLSSim.vehicle[39].app[0]  packetReceived:count   987
+...</code></pre>
+
+    <h3>File Relationship Diagram</h3>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+graph LR
+    PY["run_all_simulations_9.py"]
+    OPP["opp_run_release.exe"]
+    SCA["{config}-{pos_tag}-rep{N}-#0.sca"]
+    RT["{config}-{pos_tag}-rep{N}.rt"]
+    MAN["run_manifest.csv"]
+    SUM["run_summary.txt"]
+    POST["Post-processing\n(pandas + matplotlib)"]
+
+    PY -->|"subprocess"| OPP
+    OPP -->|"**.scalar-recording=true"| SCA
+    OPP -->|"RoutingTableRecorder"| RT
+    PY -->|"append row after each run"| MAN
+    PY -->|"write at batch end"| SUM
+    MAN -->|"index .sca paths"| POST
+    SCA -->|"parse scalar values"| POST
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- SECTION 5: METRICS LOCATION                          -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="section" id="s5">
+    <h2><span class="sec-num">§5</span> Core Project Metrics Location</h2>
+    <p>
+      All metrics are emitted as OMNeT++ <strong>signals</strong> in the routing modules (<code>UFRPLS.cc</code> / <code>GPSRCS.cc</code>)
+      and recorded as <strong>scalars</strong> in the <code>.sca</code> file.
+      Because <code>**.vector-recording = false</code>, only aggregate values (mean, min, max, count) are stored — not per-event time series.
+    </p>
+
+    <div class="metric-grid">
+      <div class="metric-card" id="s5-cs">
+        <h5>Secrecy Capacity (CS)</h5>
+        <span class="signal">Signal: csSignal (both protocols)</span>
+        <span class="formula">C_ij = log₂(1 + Pt·(λ/4πd)²/σ²)
+CS_ij = max(C_ij − max_e(C_ie), 0)</span>
+        <p class="sca-key">.sca key: secrecyCapacity:mean / :max / :min</p>
+        <p>Emitted per forwarding hop. In UFRPLS it <em>drives</em> routing; in GPSRCS it is measured <em>after</em> the distance-based decision.</p>
+      </div>
+      <div class="metric-card">
+        <h5>Min CS Per Packet</h5>
+        <span class="signal">Signal: minCsPerPktSignal</span>
+        <span class="formula">min CS across all hops of one delivered packet</span>
+        <p class="sca-key">.sca key: minSecrecyCapacityPerPacket:mean</p>
+        <p>Worst-case security along the entire path. Always ≥ 0 in UFRPLS; can be 0 in GPSRCS.</p>
+      </div>
+      <div class="metric-card" id="s5-pdr">
+        <h5>Packet Delivery Ratio (PDR)</h5>
+        <span class="signal">INET app module scalars (no custom signal)</span>
+        <span class="formula">PDR = packetReceived / packetSent</span>
+        <p class="sca-key">.sca: vehicle[1].app[0] packetSent:count<br>
+        vehicle[N-1].app[0] packetReceived:count</p>
+        <p>Drop causes: UFRPLS — wait timeout (65ms); GPSRCS — immediate no-route drop.</p>
+      </div>
+      <div class="metric-card" id="s5-delay">
+        <h5>End-to-End Delay</h5>
+        <span class="signal">Signal: delaySignal</span>
+        <span class="formula">delay = simTime() − pkt.creationTime()</span>
+        <p class="sca-key">.sca key: endToEndDelay:mean / :max / :min</p>
+        <p>Measured at destination routing hook. Includes queuing, MAC backoff, propagation, and UFRPLS backoff waiting.</p>
+      </div>
+      <div class="metric-card" id="s5-hops">
+        <h5>Hop Count Metrics</h5>
+        <span class="signal">finish() scalars (not signals)</span>
+        <span class="formula">secureHopRatio = secureHops / totalHops</span>
+        <p class="sca-key">.sca: totalHops, secureHops, secureHopRatio,<br>globalEavesdropperCount</p>
+        <p>UFRPLS secureHopRatio ≈ 1.0 (zero-CS hops blocked). GPSRCS may have ratio &lt; 1.0.</p>
+      </div>
+      <div class="metric-card" id="s5-drops">
+        <h5>Drop Causes</h5>
+        <span class="signal">INET drop counters + routing module</span>
+        <span class="formula">UFRPLS: drop if totalWaited &gt; 65ms, no secure hop
+GPSRCS: immediate drop if no greedy/perimeter hop</span>
+        <p class="sca-key">.sca: droppedPackets:count (routing)<br>
+        ipv4.ip.droppedPkNoRoute:count</p>
+        <p>PDR loss = 1 − PDR; reveals routing protocol effectiveness under eavesdropper interference.</p>
+      </div>
+    </div>
+
+    <h3 id="s5-map">Metric-to-Figure Mapping</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Paper Figure</th><th>Metric</th><th>.sca Key</th><th>Config Axis</th></tr></thead>
+        <tbody>
+          <tr><td>CS vs. Density</td><td class="note">secrecyCapacity mean, avg over vehicles</td><td class="param-key">secrecyCapacity:mean</td><td class="note">N = 20,40,60,80,100</td></tr>
+          <tr><td>PDR vs. Density</td><td class="note">received / sent</td><td class="param-key">packetReceived:count / packetSent:count</td><td class="note">N = 20,40,60,80,100</td></tr>
+          <tr><td>E2E Delay vs. Density</td><td class="note">endToEndDelay mean</td><td class="param-key">endToEndDelay:mean</td><td class="note">N = 20,40,60,80,100</td></tr>
+          <tr><td>Alpha Sensitivity (CS)</td><td class="note">CS at fixed density</td><td class="param-key">secrecyCapacity:mean</td><td class="note">α = 0.1 → 0.9</td></tr>
+          <tr><td>Alpha Sensitivity (PDR)</td><td class="note">PDR at fixed density</td><td class="param-key">PDR formula</td><td class="note">α = 0.1 → 0.9</td></tr>
+          <tr><td>Secure Hop Ratio</td><td class="note">secureHops/totalHops</td><td class="param-key">secureHopRatio</td><td class="note">Protocol comparison</td></tr>
+          <tr><td>Speed Impact</td><td class="note">any metric</td><td class="note">any</td><td class="note">Configs with/without -fast suffix</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>End-to-End Workflow Sequence</h3>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant PY as run_all_simulations_9.py
+    participant XML as SUMO Route XML
+    participant LD as sumo-launchd.py
+    participant OPP as OMNeT++ (opp_run_release)
+    participant NED as UFRPLSSim (vehicles)
+    participant SCA as results/*.sca
+
+    U->>PY: python script --reps 5 --random-eav
+    PY->>PY: generate_spaced_eav_positions(5, 100, 900, 200, 500)
+    PY->>LD: start sumo-launchd.py on port 9999
+    LD-->>PY: ready
+
+    loop 50 configs × 5 reps = 250 runs
+        PY->>XML: set vehicle00 departPos
+        PY->>PY: check .sca exists? skip if yes
+        PY->>OPP: opp_run_release.exe -c config -r 0 --seed-set=rep
+        OPP->>LD: VeinsInetManager connects TraCI port 9999
+        LD->>LD: spawn SUMO with patched route XML
+        LD-->>OPP: TraCI vehicle events
+        OPP->>NED: instantiate vehicle[0..N-1], run simulation
+        Note over NED: V2V beacons, data forwarding, CS/delay signals emitted
+        OPP->>SCA: write scalar file
+        OPP-->>PY: returncode 0
+        PY->>PY: append manifest row (OK)
+    end
+
+    PY->>LD: stop sumo-launchd
+    PY->>PY: write run_summary.txt
+    PY-->>U: "Success: 250/250, Total: 12:34:56"
+      </div>
+    </div>
+  </div>
+
+  <p style="margin-top:60px; color:var(--text-dim); font-size:13px; border-top:1px solid var(--border); padding-top:20px;">
+    Report generated from: <code>UFRPLSSim.ned</code> (50 lines) · <code>omnetpp_5pos_full.ini</code> (804 lines) ·
+    <code>run_all_simulations_9.py</code> (644 lines) ·
+    Project: UFRPLS vs. GPSRCS VANET simulation — replicating Chai et al., Electronics 2023
+  </p>
+</main>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#21262d',
+      primaryTextColor: '#c9d1d9',
+      primaryBorderColor: '#30363d',
+      lineColor: '#58a6ff',
+      secondaryColor: '#161b22',
+      tertiaryColor: '#0d1117',
+      edgeLabelBackground: '#161b22',
+      clusterBkg: '#161b22',
+      titleColor: '#c9d1d9',
+      fontFamily: 'JetBrains Mono, Consolas, monospace',
+    },
+    flowchart: { curve: 'basis', useMaxWidth: false },
+    sequence:  { useMaxWidth: false, boxMargin: 8, noteMargin: 6 },
+  });
+
+  // Active sidebar link tracking
+  const sections = document.querySelectorAll('[id]');
+  const navLinks = document.querySelectorAll('nav a[href^="#"]');
+  const observer = new IntersectionObserver(
+    entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          navLinks.forEach(l => l.classList.remove('active'));
+          const active = document.querySelector(`nav a[href="#${e.target.id}"]`);
+          if (active) active.classList.add('active');
+        }
+      });
+    },
+    { rootMargin: '-20% 0px -70% 0px' }
+  );
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

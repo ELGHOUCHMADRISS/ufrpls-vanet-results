@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPSRCS Protocol — Comprehensive Technical Report</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg:        #0d1117;
+    --bg2:       #161b22;
+    --bg3:       #21262d;
+    --bg4:       #2d333b;
+    --border:    #30363d;
+    --accent:    #58a6ff;
+    --accent2:   #3fb950;
+    --accent3:   #d29922;
+    --accent4:   #f85149;
+    --purple:    #bc8cff;
+    --text:      #c9d1d9;
+    --text2:     #8b949e;
+    --text3:     #6e7681;
+    --code-bg:   #0d1117;
+    --radius:    8px;
+    --shadow:    0 4px 24px rgba(0,0,0,0.5);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 15px; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+    line-height: 1.7;
+  }
+
+  /* ─── Layout ─── */
+  .layout { display: flex; min-height: 100vh; }
+  aside {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: 268px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    overflow-y: auto; overflow-x: hidden;
+    z-index: 50;
+    padding-bottom: 24px;
+  }
+  aside::-webkit-scrollbar { width: 4px; }
+  aside::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .nav-logo {
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .nav-logo h1 { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: 0.5px; }
+  .nav-logo p  { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  nav a {
+    display: block; padding: 5px 16px;
+    font-size: 12.5px; color: var(--text2);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  nav a:hover { color: var(--accent); background: rgba(88,166,255,0.05); border-left-color: var(--accent); }
+  nav .nav-section {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+    text-transform: uppercase; color: var(--text3);
+    padding: 12px 16px 4px;
+  }
+  main {
+    margin-left: 268px;
+    flex: 1;
+    max-width: 980px;
+    padding: 44px 48px 88px;
+    min-width: 0;
+  }
+
+  /* ─── Hero ─── */
+  .hero {
+    background: linear-gradient(135deg, #0e1a35 0%, #0d1117 70%);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 36px 40px;
+    margin-bottom: 44px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: 0; right: 0;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle at 100% 0%, rgba(88,166,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero h1 { font-size: 1.9rem; font-weight: 700; color: #fff; line-height: 1.2; }
+  .hero .subtitle { color: var(--accent); font-size: 1rem; margin: 6px 0 18px; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 20px; padding: 3px 12px;
+    font-size: 11.5px; color: var(--text2);
+  }
+  .chip .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ─── Alert box ─── */
+  .alert {
+    border-left: 4px solid var(--accent);
+    background: rgba(88,166,255,0.06);
+    padding: 14px 18px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    margin: 16px 0;
+    font-size: 13.5px; color: var(--text2);
+    line-height: 1.6;
+  }
+  .alert.warn { border-color: var(--accent3); background: rgba(210,153,34,0.06); }
+  .alert.success { border-color: var(--accent2); background: rgba(63,185,80,0.06); }
+  .alert.danger  { border-color: var(--accent4); background: rgba(248,81,73,0.06); }
+  .alert strong { color: var(--text); }
+
+  /* ─── Section headings ─── */
+  section { margin-bottom: 56px; }
+  h2.sh {
+    font-size: 1.25rem; font-weight: 700;
+    color: var(--accent);
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 10px; margin-bottom: 22px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2.sh .icon {
+    width: 30px; height: 30px; border-radius: 6px;
+    background: var(--accent); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  h3 { font-size: 1rem; color: var(--purple); margin: 28px 0 10px; font-weight: 600; }
+  h4 {
+    font-size: 0.78rem; color: var(--accent3);
+    text-transform: uppercase; letter-spacing: 1px;
+    margin: 18px 0 7px; font-weight: 700;
+  }
+  p { color: var(--text2); margin-bottom: 10px; }
+
+  /* ─── Function cards ─── */
+  .fn-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin: 28px 0;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .fn-head {
+    background: var(--bg3);
+    padding: 13px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .fn-sig {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 13.5px; color: #79c0ff; font-weight: 600;
+  }
+  .fn-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    font-size: 11px; border-radius: 12px;
+    padding: 2px 10px; border: 1px solid;
+    display: inline-block;
+  }
+  .tag-blue  { color: var(--accent);  border-color: rgba(88,166,255,0.4);  background: rgba(88,166,255,0.08); }
+  .tag-green { color: var(--accent2); border-color: rgba(63,185,80,0.4);   background: rgba(63,185,80,0.08); }
+  .tag-amber { color: var(--accent3); border-color: rgba(210,153,34,0.4);  background: rgba(210,153,34,0.08); }
+  .tag-red   { color: var(--accent4); border-color: rgba(248,81,73,0.4);   background: rgba(248,81,73,0.08); }
+  .tag-purple{ color: var(--purple);  border-color: rgba(188,140,255,0.4); background: rgba(188,140,255,0.08); }
+  .fn-body { padding: 18px 22px; }
+  .fn-body p { color: var(--text2); }
+  .fn-meta { display: grid; grid-template-columns: 130px 1fr; gap: 5px 12px; font-size: 13px; margin: 12px 0; }
+  .fn-meta dt { color: var(--text3); font-weight: 600; }
+  .fn-meta dd { color: var(--text); }
+
+  /* ─── Tables ─── */
+  .tbl-wrap { overflow-x: auto; margin: 14px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead { background: var(--bg3); }
+  th {
+    text-align: left; padding: 9px 13px;
+    color: var(--accent); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 1px;
+    border-bottom: 2px solid var(--border);
+  }
+  td { padding: 8px 13px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: top; }
+  tr:hover td { background: rgba(88,166,255,0.03); }
+
+  /* ─── Code ─── */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    overflow-x: auto; font-size: 12.5px; line-height: 1.7;
+    color: #c9d1d9; margin: 12px 0;
+  }
+  code {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    background: rgba(110,118,129,0.15);
+    border-radius: 4px; padding: 1px 6px;
+    font-size: 12.5px; color: #79c0ff;
+  }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; color: inherit; }
+
+  /* ─── Formula ─── */
+  .formula {
+    background: #080d1a;
+    border: 1px solid #1c2a4a;
+    border-radius: var(--radius);
+    padding: 16px 22px;
+    font-family: monospace; font-size: 13px;
+    color: #a5c8f0; line-height: 2; margin: 14px 0;
+  }
+
+  /* ─── Mermaid ─── */
+  .mmd {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px; margin: 14px 0;
+    overflow-x: auto;
+  }
+  .mmd .mermaid { min-width: 280px; }
+
+  /* ─── Stat pills ─── */
+  .pill-row { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0; }
+  .pill {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 14px; padding: 3px 11px;
+    font-size: 12px; color: var(--text2);
+  }
+
+  /* ─── Stat grid ─── */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 14px; margin: 16px 0; }
+  .stat-card {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+    text-align: center;
+  }
+  .stat-val { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+  .stat-lbl { font-size: 12px; color: var(--text2); margin-top: 3px; }
+
+  /* ─── Compare table ─── */
+  .cmp-good { color: var(--accent2); }
+  .cmp-warn { color: var(--accent3); }
+
+  /* ─── Scrollbar ─── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  @media (max-width: 860px) {
+    aside { display: none; }
+    main  { margin-left: 0; padding: 24px 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ────────────────── Sidebar ────────────────── -->
+<aside>
+  <div class="nav-logo">
+    <h1>GPSRCS Report</h1>
+    <p>GPSR Baseline + PLS Measurement</p>
+  </div>
+  <nav>
+    <div class="nav-section">Overview</div>
+    <a href="#overview">Protocol Design Intent</a>
+    <a href="#statics">Static Elements</a>
+    <div class="nav-section">Lifecycle</div>
+    <a href="#ctor">Constructor / Destructor</a>
+    <a href="#init">initialize()</a>
+    <a href="#start">handleStartOperation()</a>
+    <a href="#stop">handleStop / Crash</a>
+    <a href="#finish">finish()</a>
+    <div class="nav-section">Message Dispatch</div>
+    <a href="#msgup">handleMessageWhenUp()</a>
+    <a href="#self">processSelfMessage()</a>
+    <a href="#msg">processMessage()</a>
+    <div class="nav-section">Beacon Subsystem</div>
+    <a href="#sched-beacon">scheduleBeaconTimer()</a>
+    <a href="#proc-beacon-t">processBeaconTimer()</a>
+    <a href="#sched-purge">schedulePurgeNeighborsTimer()</a>
+    <a href="#proc-purge">processPurgeNeighborsTimer()</a>
+    <a href="#purge">purgeNeighbors()</a>
+    <a href="#send-udp">sendUdpPacket()</a>
+    <a href="#proc-udp">processUdpPacket()</a>
+    <a href="#create-bkn">createBeacon()</a>
+    <a href="#send-bkn">sendBeacon()</a>
+    <a href="#proc-bkn">processBeacon()</a>
+    <div class="nav-section">Option Handling</div>
+    <a href="#create-opt">createGPSRCSOption()</a>
+    <a href="#opt-len">computeOptionLength()</a>
+    <a href="#set-opt">setGPSRCSOptionOnNetworkDatagram()</a>
+    <a href="#find-opt">find / get Option methods</a>
+    <div class="nav-section">Position & Geometry</div>
+    <a href="#global-reg">Global Registry</a>
+    <a href="#intersection">computeIntersection()</a>
+    <a href="#angles">getVectorAngle / getNeighborAngle</a>
+    <a href="#planar">getPlanarNeighbors()</a>
+    <a href="#planar-ccw">getPlanarNeighborsCCW()</a>
+    <div class="nav-section">PLS Measurement</div>
+    <a href="#chan-cap">calculateChannelCapacity()</a>
+    <a href="#sec-cap">calculateSecrecyCapacity()</a>
+    <div class="nav-section">Routing</div>
+    <a href="#nexthop">findNextHop()</a>
+    <a href="#greedy">findGreedyRoutingNextHop()</a>
+    <a href="#perimeter">findPerimeterRoutingNextHop()</a>
+    <a href="#route">routeDatagram()</a>
+    <div class="nav-section">Netfilter Hooks</div>
+    <a href="#pre-hook">datagramPreRoutingHook()</a>
+    <a href="#local-in">datagramLocalInHook()</a>
+    <a href="#local-out">datagramLocalOutHook()</a>
+    <div class="nav-section">Helpers</div>
+    <a href="#addresses">Address Helpers</a>
+    <a href="#neighbor-exp">getNextNeighborExpiration()</a>
+    <a href="#signal">receiveSignal()</a>
+    <a href="#compare">GPSRCS vs UFRPLS</a>
+  </nav>
+</aside>
+
+<!-- ────────────────── Main ────────────────── -->
+<main>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>GPSRCS Protocol</h1>
+  <div class="subtitle">GPSR Baseline with post-hoc Physical Layer Security Measurement</div>
+  <div class="meta-row">
+    <span class="chip"><span class="dot" style="background:var(--accent)"></span>Author: EL-GHOUCHMA DRISS</span>
+    <span class="chip"><span class="dot" style="background:var(--accent2)"></span>INET 4.x / OMNeT++ 6.x</span>
+    <span class="chip"><span class="dot" style="background:var(--accent3)"></span>vanetsim.routing.gpsrCS</span>
+    <span class="chip"><span class="dot" style="background:var(--purple)"></span>Date: 2026-07-01</span>
+  </div>
+</div>
+
+<!-- OVERVIEW -->
+<section id="overview">
+<h2 class="sh"><span class="icon">⚡</span>Protocol Design Intent</h2>
+
+<p>GPSRCS is the <strong>baseline comparator</strong> for UFRPLS research. Routing decisions are made using <strong>pure geographic distance</strong> — the same algorithm as standard GPSR (greedy forwarding with perimeter fallback). After each hop is selected, Secrecy Capacity (CS) is computed <em>post-hoc</em> as a passive observer metric that has <strong>zero influence</strong> on routing.</p>
+
+<div class="alert">
+  <strong>Key design principle:</strong> By using identical PLS measurement code in both GPSRCS and UFRPLS but letting UFRPLS use CS to drive routing, the experimental comparison isolates exactly the benefit of the utility-function approach.
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="stat-val">Distance</div><div class="stat-lbl">Routing Criterion</div></div>
+  <div class="stat-card"><div class="stat-val">Post-hoc</div><div class="stat-lbl">CS Role</div></div>
+  <div class="stat-card"><div class="stat-val">200 m</div><div class="stat-lbl">Communication Range R</div></div>
+  <div class="stat-card"><div class="stat-val">GG / RNG</div><div class="stat-lbl">Planarization Modes</div></div>
+</div>
+
+<div class="formula">
+Routing:  j* = argmin{ dist(j, destination) }  over j within 200 m<br>
+CS:       C_ij  = log₂(1 + Pt × (λ/4πd)² / σ²)    [measured, not used]<br>
+          CS_ij = max(C_ij − C_ie, 0)               [worst-case over eavesdroppers]
+</div>
+</section>
+
+<!-- STATICS -->
+<section id="statics">
+<h2 class="sh"><span class="icon">🔧</span>Static Module-Level Elements</h2>
+
+<div class="fn-card">
+  <div class="fn-head">
+    <div class="fn-sig">static inline double determinant(a1, a2, b1, b2)</div>
+    <div class="fn-tags">
+      <span class="tag tag-blue">file-scope</span>
+      <span class="tag tag-green">helper</span>
+      <span class="tag tag-amber">Called by: computeIntersectionInsideLineSegments</span>
+    </div>
+  </div>
+  <div class="fn-body">
+    <p>Computes the 2×2 matrix determinant <code>a1×b2 − a2×b1</code>. Used by the line-segment intersection test in perimeter routing.</p>
+    <div class="mmd"><div class="mermaid">flowchart LR
+  A([determinant a1 a2 b1 b2]) --> B["return a1*b2 - a2*b1"]</div></div>
+  </div>
+</div>
+
+<div class="fn-card">
+  <div class="fn-head">
+    <div class="fn-sig">static constexpr double COMM_RANGE_M = 200.0</div>
+    <div class="fn-tags"><span class="tag tag-amber">Chai Table 2</span></div>
+  </div>
+  <div class="fn-body">
+    <p>Maximum communication range in metres. Neighbours farther than this value are excluded from next-hop selection in <code>findGreedyRoutingNextHop()</code>.</p>
+  </div>
+</div>
+
+<div class="fn-card">
+  <div class="fn-head">
+    <div class="fn-sig">GPSRCSPositionTable GPSRCS::globalPositionTable</div>
+    <div class="fn-tags"><span class="tag tag-purple">static class member</span><span class="tag tag-amber">Shared across all node instances</span></div>
+  </div>
+  <div class="fn-body">
+    <p>Simulation-wide address→position registry. All <code>GPSRCS</code> module instances share this single object. Stores both legitimate node positions and eavesdropper entries. Accessed by <code>lookupPositionInGlobalRegistry()</code>, <code>storePositionInGlobalRegistry()</code>, and <code>calculateSecrecyCapacity()</code>.</p>
+  </div>
+</div>
+</section>
+
+<!-- CONSTRUCTOR -->
+<section id="ctor">
+<h2 class="sh"><span class="icon">🏗️</span>Constructor / Destructor</h2>
+
+<div class="fn-card">
+  <div class="fn-head">
+    <div class="fn-sig">GPSRCS() / ~GPSRCS()</div>
+    <div class="fn-tags"><span class="tag tag-blue">lifecycle</span></div>
+  </div>
+  <div class="fn-body">
+    <p>Constructor is a no-op. Destructor cancels and deletes both timer messages to prevent memory leaks.</p>
+    <div class="mmd"><div class="mermaid">flowchart LR
+  A([~GPSRCS]) --> B[cancelAndDelete beaconTimer]
+  B --> C[cancelAndDelete purgeNeighborsTimer]</div></div>
+  </div>
+</div>
+</section>
+
+<!-- INITIALIZE -->
+<section id="init">
+<h2 class="sh"><span class="icon">⚙️</span>initialize(int stage)</h2>
+
+<div class="fn-card">
+  <div class="fn-head">
+    <div class="fn-sig">void GPSRCS::initialize(int stage)</div>
+    <div class="fn-tags">
+      <span class="tag tag-blue">Two-stage OMNeT++ init</span>
+      <span class="tag tag-amber">Called by: framework</span>
+    </div>
+  </div>
+  <div class="fn-body">
+    <h4>Stage INITSTAGE_LOCAL</h4>
+    <p>Reads all NED parameters, resolves module pointers, creates timers, registers statistic signals, clears global table.</p>
+    <h4>Stage INITSTAGE_ROUTING_PROTOCOLS</h4>
+    <p>Sets address type, registers MANET protocol gates, subscribes to link-break signal, registers netfilter hook at priority 0, enables GUI WATCH.</p>
+    <div class="fn-meta">
+      <dt>planarizationMode</dt><dd>Parsed from NED string: "" → NO_PLANARIZATION, "GG", "RNG"</dd>
+      <dt>PLS params</dt><dd>transmitPower, noisePower, wavelength (for post-hoc CS only)</dd>
+      <dt>Signals</dt><dd>csSignal, minCsPerPktSignal, delaySignal registered</dd>
+    </div>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([initialize stage]) --> B{stage == LOCAL?}
+  B -- yes --> C[parse planarizationMode]
+  C --> D[read NED params into members]
+  D --> E[resolve host mobility interfaceTable routingTable networkProtocol]
+  E --> F[create beaconTimer purgeNeighborsTimer]
+  F --> G[init totalHops=0 secureHops=0]
+  G --> H[register csSignal minCsPerPktSignal delaySignal]
+  H --> I[globalPositionTable.clear]
+  B -- no --> J{stage == ROUTING_PROTOCOLS?}
+  J -- yes --> K[addressType = getSelfAddress.getAddressType]
+  K --> L[registerService registerProtocol manet]
+  L --> M[subscribe linkBrokenSignal]
+  M --> N[networkProtocol->registerHook 0 this]
+  N --> O[WATCH neighborPositionTable]</div></div>
+  </div>
+</div>
+</section>
+
+<!-- MESSAGE DISPATCH -->
+<section id="msgup">
+<h2 class="sh"><span class="icon">📨</span>Message Dispatch</h2>
+
+<div class="fn-card">
+  <div class="fn-head">
+    <div class="fn-sig">void handleMessageWhenUp(cMessage *message)</div>
+    <div class="fn-tags"><span class="tag tag-blue">Called by: OMNeT++ framework</span></div>
+  </div>
+  <div class="fn-body">
+    <div class="mmd"><div class="mermaid">flowchart LR
+  A([handleMessageWhenUp]) --> B{isSelfMessage?}
+  B -- yes --> C[processSelfMessage]
+  B -- no --> D[processMessage]</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="self">
+  <div class="fn-head">
+    <div class="fn-sig">void processSelfMessage(cMessage *message)</div>
+  </div>
+  <div class="fn-body">
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([processSelfMessage]) --> B{== beaconTimer?}
+  B -- yes --> C[processBeaconTimer]
+  B -- no --> D{== purgeNeighborsTimer?}
+  D -- yes --> E[processPurgeNeighborsTimer]
+  D -- no --> F[throw cRuntimeError Unknown self message]</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="msg">
+  <div class="fn-head">
+    <div class="fn-sig">void processMessage(cMessage *message)</div>
+  </div>
+  <div class="fn-body">
+    <div class="mmd"><div class="mermaid">flowchart LR
+  A([processMessage]) --> B{dynamic_cast Packet?}
+  B -- yes --> C[processUdpPacket]
+  B -- no --> D[throw cRuntimeError Unknown message]</div></div>
+  </div>
+</div>
+</section>
+
+<!-- BEACON SUBSYSTEM -->
+<section id="sched-beacon">
+<h2 class="sh"><span class="icon">📡</span>Beacon Subsystem</h2>
+
+<div class="fn-card">
+  <div class="fn-head">
+    <div class="fn-sig">void scheduleBeaconTimer()</div>
+    <div class="fn-tags"><span class="tag tag-blue">Called by: processBeaconTimer, handleStartOperation</span></div>
+  </div>
+  <div class="fn-body">
+    <p>Schedules <code>beaconTimer</code> at <code>simTime() + beaconInterval ± uniform jitter</code> to prevent beacon collision storms.</p>
+    <div class="mmd"><div class="mermaid">flowchart LR
+  A([scheduleBeaconTimer]) --> B["t = simTime + beaconInterval + uniform(-1,1)*maxJitter"]
+  B --> C[scheduleAt t beaconTimer]</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="proc-beacon-t">
+  <div class="fn-head">
+    <div class="fn-sig">void processBeaconTimer()</div>
+    <div class="fn-tags"><span class="tag tag-blue">Called by: processSelfMessage</span></div>
+  </div>
+  <div class="fn-body">
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([processBeaconTimer]) --> B[selfAddress = getSelfAddress]
+  B --> C{address unspecified?}
+  C -- no --> D[sendBeacon createBeacon]
+  D --> E[storeSelfPositionInGlobalRegistry]
+  C -- yes --> F[skip beacon]
+  E --> G[scheduleBeaconTimer]
+  F --> G
+  G --> H[schedulePurgeNeighborsTimer]</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="sched-purge">
+  <div class="fn-head">
+    <div class="fn-sig">void schedulePurgeNeighborsTimer()</div>
+    <div class="fn-tags"><span class="tag tag-blue">Called by: processBeaconTimer, processPurgeNeighborsTimer, processUdpPacket</span></div>
+  </div>
+  <div class="fn-body">
+    <p>Schedules or reschedules the purge timer to fire exactly when the oldest neighbour expires. Cancels if table is empty.</p>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([schedulePurgeNeighborsTimer]) --> B[next = getNextNeighborExpiration]
+  B --> C{next == MAX_TIME?}
+  C -- yes --> D{timer scheduled?}
+  D -- yes --> E[cancelEvent purgeNeighborsTimer]
+  D -- no --> F[do nothing]
+  C -- no --> G{timer not scheduled?}
+  G -- yes --> H[scheduleAt next]
+  G -- no --> I{arrival != next?}
+  I -- yes --> J[cancel + reschedule]
+  I -- no --> K[already correct]</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="proc-purge">
+  <div class="fn-head">
+    <div class="fn-sig">void processPurgeNeighborsTimer()</div>
+  </div>
+  <div class="fn-body">
+    <div class="mmd"><div class="mermaid">flowchart LR
+  A([processPurgeNeighborsTimer]) --> B[purgeNeighbors]
+  B --> C[schedulePurgeNeighborsTimer]</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="purge">
+  <div class="fn-head">
+    <div class="fn-sig">void purgeNeighbors()</div>
+    <div class="fn-tags"><span class="tag tag-amber">Removes stale neighbours AND eavesdroppers</span></div>
+  </div>
+  <div class="fn-body">
+    <div class="mmd"><div class="mermaid">flowchart LR
+  A([purgeNeighbors]) --> B[removeOldPositions simTime-validityInterval]
+  B --> C[removeOldEavesdroppers simTime-validityInterval]</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="send-udp">
+  <div class="fn-head">
+    <div class="fn-sig">void sendUdpPacket(Packet *packet)</div>
+  </div>
+  <div class="fn-body"><p>Forwards the packet out through the <code>socketOut</code> gate via <code>send()</code>.</p></div>
+</div>
+
+<div class="fn-card" id="proc-udp">
+  <div class="fn-head">
+    <div class="fn-sig">void processUdpPacket(Packet *packet)</div>
+    <div class="fn-tags"><span class="tag tag-blue">Called by: processMessage</span></div>
+  </div>
+  <div class="fn-body">
+    <div class="mmd"><div class="mermaid">flowchart LR
+  A([processUdpPacket]) --> B[packet->popAtFront UdpHeader]
+  B --> C[processBeacon packet]
+  C --> D[schedulePurgeNeighborsTimer]</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="create-bkn">
+  <div class="fn-head">
+    <div class="fn-sig">const Ptr&lt;GPSRCSBeacon&gt; createBeacon()</div>
+    <div class="fn-tags"><span class="tag tag-amber">Full kinematic state (pos+vel+accel+dir)</span></div>
+  </div>
+  <div class="fn-body">
+    <p>Allocates a <code>GPSRCSBeacon</code> chunk with this node's full mobility state and the <code>isEavesdropper</code> flag.</p>
+    <div class="alert warn"><strong>Difference from UFRPLS:</strong> GPSRCS beacons include velocity, acceleration, and angular direction — enabling future mobility-prediction extensions. UFRPLS beacons carry position only.</div>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([createBeacon]) --> B[makeShared GPSRCSBeacon]
+  B --> C[setAddress getSelfAddress]
+  C --> D[setPosition getCurrentPosition]
+  D --> E[setVelocity getCurrentVelocity]
+  E --> F[setAcceleration getCurrentAcceleration]
+  F --> G[setDirection getCurrentAngularPosition]
+  G --> H[setChunkLength addr+pos bytes]
+  H --> I[setEavesdropper par isEavesdropper]
+  I --> J([return beacon])</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="send-bkn">
+  <div class="fn-head">
+    <div class="fn-sig">void sendBeacon(const Ptr&lt;GPSRCSBeacon&gt;&amp; beacon)</div>
+  </div>
+  <div class="fn-body">
+    <p>Wraps the beacon chunk in a UDP packet (port 269), sets MANET multicast destination, hop limit 255, and sends.</p>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([sendBeacon]) --> B[new Packet GPSRCSBeacon]
+  B --> C[insertAtBack beacon chunk]
+  C --> D[makeShared UdpHeader port=269 CRC_DISABLED]
+  D --> E[insertAtFront udpHeader]
+  E --> F[addTag L3AddressReq src=self dst=MANET multicast]
+  F --> G[addTag HopLimitReq 255]
+  G --> H[addTag PacketProtocolTag manet]
+  H --> I[addTag DispatchProtocolReq]
+  I --> J[sendUdpPacket]</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="proc-bkn">
+  <div class="fn-head">
+    <div class="fn-sig">void processBeacon(Packet *packet)</div>
+    <div class="fn-tags">
+      <span class="tag tag-amber">PLS extension: eavesdropper branching</span>
+      <span class="tag tag-blue">Called by: processUdpPacket</span>
+    </div>
+  </div>
+  <div class="fn-body">
+    <p>Central PLS branching point. Eavesdropper beacons go to both local and global eavesdropper tables; legitimate beacons update full kinematic state in the local neighbour table.</p>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([processBeacon]) --> B[peek GPSRCSBeacon from packet]
+  B --> C{isEavesdropper?}
+  C -- yes --> D[neighborPositionTable.addEavesdropper addr pos]
+  D --> E[globalPositionTable.addEavesdropper addr pos]
+  E --> F[EV_INFO eavesdropper recorded local+global]
+  C -- no --> G[setVelocity addr velocity]
+  G --> H[setAcceleration addr acceleration]
+  H --> I[setDirection addr direction]
+  I --> J[setPosition addr position]
+  J --> K[EV_INFO neighbor updated]
+  F --> L[delete packet]
+  K --> L</div></div>
+  </div>
+</div>
+</section>
+
+<!-- OPTION HANDLING -->
+<section id="create-opt">
+<h2 class="sh"><span class="icon">📦</span>Option Handling</h2>
+
+<div class="fn-card">
+  <div class="fn-head">
+    <div class="fn-sig">GPSRCSOption* createGPSRCSOption(L3Address destination)</div>
+    <div class="fn-tags"><span class="tag tag-blue">Called by: datagramLocalOutHook</span></div>
+  </div>
+  <div class="fn-body">
+    <p>Creates a routing option with mode=GREEDY, destination position from global registry, and <code>routeMinCS = 1e300</code> sentinel.</p>
+    <div class="mmd"><div class="mermaid">flowchart LR
+  A([createGPSRCSOption]) --> B[new GPSRCSOption]
+  B --> C[setRoutingMode GPSRCS_GREEDY_ROUTING]
+  C --> D[setDestinationPosition lookupPositionInGlobalRegistry dst]
+  D --> E[setLength computeOptionLength]
+  E --> F([return option])</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="opt-len">
+  <div class="fn-head">
+    <div class="fn-sig">int computeOptionLength(GPSRCSOption *option)</div>
+  </div>
+  <div class="fn-body">
+    <p>Returns byte length: <code>2 (TL) + 1 (mode) + 3×positionByteLength + 3×addressByteLength</code>. The three positions are: destination, perimeter-start, perimeter-forward. The three addresses are: first-sender, first-receiver, sender.</p>
+    <div class="alert warn"><strong>Difference from UFRPLS:</strong> GPSRCS option is larger — it carries full perimeter routing state (3 positions + 3 addresses). UFRPLS option only needs destination position + routeMinCS.</div>
+  </div>
+</div>
+
+<div class="fn-card" id="set-opt">
+  <div class="fn-head">
+    <div class="fn-sig">void setGPSRCSOptionOnNetworkDatagram(packet, networkHeader, option)</div>
+  </div>
+  <div class="fn-body">
+    <p>Embeds the option TLV into the correct protocol header (IPv4 options / IPv6 HopByHop / NextHop TLV), adjusting all length fields.</p>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([setGPSRCSOptionOnNetworkDatagram]) --> B[trimFront packet]
+  B --> C{IPv4 header?}
+  C -- yes --> D[remove Ipv4Header addOption update lengths reinsert]
+  C -- no --> E{IPv6 header?}
+  E -- yes --> F[remove Ipv6Header find/create HopByHop insertTlvOption update lengths reinsert]
+  E -- no --> G{NextHop header?}
+  G -- yes --> H[remove NextHopHeader insertTlvOption update length reinsert]
+  G -- no --> I[no-op]</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="find-opt">
+  <div class="fn-head">
+    <div class="fn-sig">find* / get* Option methods (4 variants)</div>
+  </div>
+  <div class="fn-body">
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Method</th><th>Returns</th><th>On not-found</th><th>Mutability</th></tr></thead>
+      <tbody>
+        <tr><td><code>findGPSRCSOptionInNetworkDatagram</code></td><td>const ptr</td><td><code>nullptr</code></td><td>read-only</td></tr>
+        <tr><td><code>findGPSRCSOptionInNetworkDatagramForUpdate</code></td><td>mutable ptr</td><td><code>nullptr</code></td><td>mutable</td></tr>
+        <tr><td><code>getGPSRCSOptionFromNetworkDatagram</code></td><td>const ptr</td><td>throws <code>cRuntimeError</code></td><td>read-only</td></tr>
+        <tr><td><code>getGPSRCSOptionFromNetworkDatagramForUpdate</code></td><td>mutable ptr</td><td>throws <code>cRuntimeError</code></td><td>mutable</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- POSITION & GEOMETRY -->
+<section id="global-reg">
+<h2 class="sh"><span class="icon">📍</span>Position & Geometry</h2>
+
+<div class="fn-card">
+  <div class="fn-head">
+    <div class="fn-sig">Global Registry: lookup / store / storeSelf</div>
+  </div>
+  <div class="fn-body">
+    <p><code>lookupPositionInGlobalRegistry(addr)</code> → reads from static <code>globalPositionTable</code>. Called by <code>createGPSRCSOption()</code>.</p>
+    <p><code>storePositionInGlobalRegistry(addr, pos)</code> → writes to static table. Called by <code>storeSelfPositionInGlobalRegistry()</code>.</p>
+    <p><code>storeSelfPositionInGlobalRegistry()</code> → convenience wrapper storing own address + current position. Called by <code>processBeaconTimer()</code> and <code>handleStartOperation()</code>.</p>
+    <div class="mmd"><div class="mermaid">flowchart LR
+  A([storeSelfPositionInGlobalRegistry]) --> B[selfAddr = getSelfAddress]
+  B --> C{unspecified?}
+  C -- no --> D[storePositionInGlobalRegistry selfAddr currentPos]
+  C -- yes --> E[skip]</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="intersection">
+  <div class="fn-head">
+    <div class="fn-sig">Coord computeIntersectionInsideLineSegments(begin1, end1, begin2, end2)</div>
+    <div class="fn-tags"><span class="tag tag-blue">Called by: findPerimeterRoutingNextHop</span></div>
+  </div>
+  <div class="fn-body">
+    <p>Computes the 2-D intersection of two line segments using Cramer's rule with the <code>determinant()</code> helper. Returns <code>Coord::NIL</code> for degenerate inputs or out-of-segment intersections.</p>
+    <div class="formula">
+a = det(x1,y1, x2,y2)<br>
+b = det(x3,y3, x4,y4)<br>
+c = det(x1-x2, y1-y2, x3-x4, y3-y4)<br>
+x = det(a, x1-x2, b, x3-x4) / c<br>
+y = det(a, y1-y2, b, y3-y4) / c
+    </div>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([computeIntersectionInsideLineSegments]) --> B{any endpoint pair equal?}
+  B -- yes --> C([return Coord::NIL])
+  B -- no --> D[extract coordinates]
+  D --> E[compute a b c x y via Cramer rule]
+  E --> F{intersection outside either segment?}
+  F -- yes --> C
+  F -- no --> G([return Coord x y 0])</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="angles">
+  <div class="fn-head">
+    <div class="fn-sig">getVectorAngle(vector) / getNeighborAngle(address)</div>
+    <div class="fn-tags"><span class="tag tag-blue">Used by: perimeter routing</span></div>
+  </div>
+  <div class="fn-body">
+    <p><code>getVectorAngle()</code> returns the bearing of a 2-D vector in [0, 2π) using <code>atan2(-y, x)</code>. The negated y accounts for OMNeT++'s downward-positive y convention.</p>
+    <p><code>getNeighborAngle(address)</code> returns the angle from self to the given neighbour.</p>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([getVectorAngle]) --> B[ASSERT vector != ZERO]
+  B --> C["angle = atan2(-vector.y, vector.x)"]
+  C --> D{angle < 0?}
+  D -- yes --> E[angle += 2*PI]
+  D -- no --> F
+  E --> G([return angle])
+  F --> G</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="planar">
+  <div class="fn-head">
+    <div class="fn-sig">vector&lt;L3Address&gt; getPlanarNeighbors()</div>
+    <div class="fn-tags">
+      <span class="tag tag-blue">Called by: getPlanarNeighborsCounterClockwise</span>
+      <span class="tag tag-amber">Supports NO_PLANARIZATION / RNG / GG</span>
+    </div>
+  </div>
+  <div class="fn-body">
+    <p>Filters the neighbour table to retain only nodes that belong to the planar subgraph under the selected algorithm. Required by perimeter routing to guarantee loop-freedom.</p>
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Mode</th><th>Elimination Rule</th></tr></thead>
+      <tbody>
+        <tr><td>NO_PLANARIZATION</td><td>No filtering — all neighbours kept</td></tr>
+        <tr><td>RNG</td><td>Eliminate j if ∃ witness w: dist(self,j) &gt; max(dist(self,w), dist(w,j))</td></tr>
+        <tr><td>GG</td><td>Eliminate j if ∃ witness w inside circle with diameter (self, j): dist(w, mid) &lt; dist(j, mid)</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([getPlanarNeighbors]) --> B[for each neighborAddress]
+  B --> C{planarizationMode?}
+  C -- NO_PLANARIZATION --> D([return all addresses immediately])
+  C -- RNG --> E{exists witness: dist self-j > max dist self-w dist w-j ?}
+  E -- yes --> F[goto eliminate]
+  E -- no --> G[add to planarNeighbors]
+  C -- GG --> H[midpoint = self+j / 2]
+  H --> I{exists witness inside circle?}
+  I -- yes --> F
+  I -- no --> G
+  C -- unknown --> J[throw cRuntimeError]
+  G --> B
+  F --> B
+  B --> K([return planarNeighbors])</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="planar-ccw">
+  <div class="fn-head">
+    <div class="fn-sig">vector&lt;L3Address&gt; getPlanarNeighborsCounterClockwise(double startAngle)</div>
+    <div class="fn-tags"><span class="tag tag-blue">Called by: findPerimeterRoutingNextHop</span></div>
+  </div>
+  <div class="fn-body">
+    <p>Returns planar neighbours sorted in counter-clockwise angular order starting from <code>startAngle</code>. The CCW ordering implements the right-hand rule used by GPSR's face traversal.</p>
+    <div class="mmd"><div class="mermaid">flowchart LR
+  A([getPlanarNeighborsCounterClockwise startAngle]) --> B[getPlanarNeighbors]
+  B --> C["sort by (neighborAngle - startAngle) wrapped to 0..2π"]
+  C --> D([return sorted list])</div></div>
+  </div>
+</div>
+</section>
+
+<!-- PLS MEASUREMENT -->
+<section id="chan-cap">
+<h2 class="sh"><span class="icon">📊</span>PLS Measurement (Post-hoc only)</h2>
+
+<div class="alert success"><strong>Design clarification:</strong> Both <code>calculateChannelCapacity()</code> and <code>calculateSecrecyCapacity()</code> are called <em>after</em> the routing decision is made. They produce statistics for comparison purposes only and do <strong>not</strong> influence which neighbour is chosen.</div>
+
+<div class="fn-card">
+  <div class="fn-head">
+    <div class="fn-sig">double calculateChannelCapacity(senderPos, receiverPos)</div>
+    <div class="fn-tags">
+      <span class="tag tag-green">Eq. 2/3 — Chai 2023</span>
+      <span class="tag tag-blue">Called by: calculateSecrecyCapacity</span>
+    </div>
+  </div>
+  <div class="fn-body">
+    <p>Shannon capacity under Free Space Path Loss. Distance clamped to ≥ 1 m.</p>
+    <div class="formula">
+d         = ||receiverPos − senderPos||  (min 1.0 m)<br>
+pathLoss  = λ / (4π × d)<br>
+|h|²      = pathLoss²<br>
+SNR       = Pt × |h|² / σ²<br>
+C         = log₂(1 + SNR)   [bits/s/Hz]
+    </div>
+    <div class="fn-meta">
+      <dt>transmitPower</dt><dd>Pt in watts (10 dBm default)</dd>
+      <dt>noisePower</dt><dd>σ² in watts (−174 dBm default)</dd>
+      <dt>wavelength</dt><dd>λ in metres (5.9 GHz → 0.05085 m)</dd>
+    </div>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([calculateChannelCapacity]) --> B[d = Euclidean distance]
+  B --> C{d < 1.0?}
+  C -- yes --> D[d = 1.0]
+  C -- no --> E
+  D --> E[pathLoss = wavelength / 4*PI*d]
+  E --> F[channelGain = pathLoss^2]
+  F --> G[SNR = transmitPower * channelGain / noisePower]
+  G --> H([return log2 1+SNR])</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="sec-cap">
+  <div class="fn-head">
+    <div class="fn-sig">double calculateSecrecyCapacity(senderPos, nextHopPos)</div>
+    <div class="fn-tags">
+      <span class="tag tag-green">Eq. 4 — Chai 2023</span>
+      <span class="tag tag-amber">Uses globalPositionTable for eavesdroppers</span>
+      <span class="tag tag-blue">Called by: findGreedyRoutingNextHop, findPerimeterRoutingNextHop</span>
+    </div>
+  </div>
+  <div class="fn-body">
+    <p>Computes worst-case Secrecy Capacity against all globally known eavesdroppers. Uses the global table (not local) so nodes outside the eavesdropper's radio range still compute correct CS values.</p>
+    <div class="formula">
+Cij = calculateChannelCapacity(sender, nextHop)<br>
+for each eavesdropper e in globalPositionTable:<br>
+&nbsp;&nbsp;Cie = calculateChannelCapacity(sender, e_pos)<br>
+&nbsp;&nbsp;CS  = max(Cij − Cie, 0)<br>
+return min(CS over all e)   ← worst case<br>
+return Cij if no eavesdroppers known
+    </div>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([calculateSecrecyCapacity]) --> B[Cij = calculateChannelCapacity sender nextHop]
+  B --> C[eavesdroppers = globalPositionTable.getEavesdropperAddresses]
+  C --> D[EV_WARN debug log count]
+  D --> E{empty?}
+  E -- yes --> F([return Cij])
+  E -- no --> G[minCS = Cij]
+  G --> H[for each eavesdropper e]
+  H --> I[ePos = getEavesdropperPosition e]
+  I --> J[Cie = calculateChannelCapacity sender ePos]
+  J --> K["CS = max(Cij-Cie, 0.0)"]
+  K --> L{CS < minCS?}
+  L -- yes --> M[minCS = CS]
+  L -- no --> N[next e]
+  M --> N --> H
+  H --> O([return minCS])</div></div>
+  </div>
+</div>
+</section>
+
+<!-- ROUTING -->
+<section id="nexthop">
+<h2 class="sh"><span class="icon">🗺️</span>Routing Logic</h2>
+
+<div class="fn-card">
+  <div class="fn-head">
+    <div class="fn-sig">L3Address findNextHop(destination, gpsrcsOption)</div>
+    <div class="fn-tags"><span class="tag tag-blue">Called by: routeDatagram</span></div>
+  </div>
+  <div class="fn-body">
+    <p>Mode dispatcher: reads routing mode from option and delegates.</p>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([findNextHop]) --> B{routingMode?}
+  B -- GREEDY --> C[findGreedyRoutingNextHop]
+  B -- PERIMETER --> D[findPerimeterRoutingNextHop]
+  B -- unknown --> E[throw cRuntimeError]
+  C --> F([return result])
+  D --> F</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="greedy">
+  <div class="fn-head">
+    <div class="fn-sig">L3Address findGreedyRoutingNextHop(destination, gpsrcsOption)</div>
+    <div class="fn-tags">
+      <span class="tag tag-green">Standard GPSR distance criterion</span>
+      <span class="tag tag-amber">Post-hoc CS measurement after selection</span>
+      <span class="tag tag-red">No CS influence on routing</span>
+    </div>
+  </div>
+  <div class="fn-body">
+    <p>Selects the neighbour <strong>closest to the destination</strong> within R=200 m. After selection, measures CS post-hoc and emits statistics. On failure, switches to perimeter routing.</p>
+    <div class="fn-meta">
+      <dt>Selection</dt><dd>min dist(neighbour, destination) with dist(self, neighbour) ≤ 200 m</dd>
+      <dt>Post-hoc</dt><dd>calculateSecrecyCapacity → totalHops++ → secureHops++ → emit csSignal</dd>
+      <dt>routeMinCS</dt><dd>Updated with min CS seen so far across all hops</dd>
+    </div>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([findGreedyRoutingNextHop]) --> B[selfPos = getCurrentPosition]
+  B --> C[destPos = option.getDestinationPosition]
+  C --> D[bestDist = dist destPos selfPos]
+  D --> E[for each neighbor in neighborPositionTable]
+  E --> F[neighborDist = dist destPos neighborPos]
+  F --> G[hopDist = dist selfPos neighborPos]
+  G --> H{neighborDist >= bestDist?}
+  H -- yes --> I[skip next]
+  H -- no --> J{hopDist > 200m?}
+  J -- yes --> I
+  J -- no --> K[bestDist=neighborDist bestNeighbor=neighbor]
+  K --> I
+  I --> E
+  E --> L{bestNeighbor unspecified?}
+  L -- yes --> M[setRoutingMode PERIMETER]
+  M --> N[setPerimeterStartPos+ForwardPos = selfPos]
+  N --> O[setCurrentFaceFirstSenderAddr = selfAddr]
+  O --> P[setCurrentFaceFirstReceiverAddr = unspecified]
+  P --> Q([findPerimeterRoutingNextHop])
+  L -- no --> R[bestPos = getPosition bestNeighbor]
+  R --> S[CS = calculateSecrecyCapacity selfPos bestPos]
+  S --> T[totalHops++]
+  T --> U{CS > EPSILON?}
+  U -- yes --> V[secureHops++]
+  U -- no --> W
+  V --> W{CS < routeMinCS?}
+  W -- yes --> X[option.setRouteMinCS CS]
+  W -- no --> Y
+  X --> Y[emit csSignal CS]
+  Y --> Z([return bestNeighbor])</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="perimeter">
+  <div class="fn-head">
+    <div class="fn-sig">L3Address findPerimeterRoutingNextHop(destination, gpsrcsOption)</div>
+    <div class="fn-tags">
+      <span class="tag tag-purple">GPSR Face Traversal / Right-hand rule</span>
+      <span class="tag tag-amber">Post-hoc CS measurement</span>
+    </div>
+  </div>
+  <div class="fn-body">
+    <p>Implements GPSR's perimeter routing on the planar graph. Two branches:</p>
+    <ul style="color:var(--text2);margin:8px 0 12px 20px;font-size:13.5px;line-height:1.9;">
+      <li><strong>Branch A:</strong> If now closer to destination than start position → switch back to greedy.</li>
+      <li><strong>Branch B:</strong> Compute CCW neighbour order from arrival angle. Walk edges; if an edge crosses the start→dest line, enter a new face. Select the first non-crossing edge. Detect face-cycle completion. Measure CS post-hoc.</li>
+    </ul>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([findPerimeterRoutingNextHop]) --> B[selfPos startPos destPos selfDist startDist]
+  B --> C{selfDist < startDist?}
+  C -- yes --> D[setRoutingMode GREEDY clear perimeter state]
+  D --> E([findGreedyRoutingNextHop])
+  C -- no --> F[firstSender = option.currentFaceFirstSender]
+  F --> G{senderAddr unspecified?}
+  G -- yes --> H[neighborAngle = angle toward destination]
+  G -- no --> I[neighborAngle = getNeighborAngle senderAddr]
+  H --> J
+  I --> J[neighbors = getPlanarNeighborsCounterClockwise neighborAngle]
+  J --> K[for each neighbor]
+  K --> L[intersection = computeIntersection start dest self neighbor]
+  L --> M{intersection NaN no crossing?}
+  M -- yes --> N[selectedNeighbor = neighbor break]
+  M -- no --> O[update currentFaceFirstSender = selfAddr]
+  O --> P[reset currentFaceFirstReceiver = unspecified]
+  P --> Q[forwardPosition = intersection]
+  Q --> K
+  K --> R{selectedNeighbor unspecified?}
+  R -- yes --> S([return unspecified])
+  R -- no --> T{firstSender==self AND firstReceiver==selected?}
+  T -- yes --> U[bubble end of perimeter]
+  U --> S
+  T -- no --> V{firstReceiver unspecified?}
+  V -- yes --> W[setCurrentFaceFirstReceiver = selectedNeighbor]
+  V -- no --> X
+  W --> X[selectedPos = getNeighborPosition selected]
+  X --> Y[CS = calculateSecrecyCapacity selfPos selectedPos]
+  Y --> Z[totalHops++]
+  Z --> AA{CS > EPSILON?}
+  AA -- yes --> AB[secureHops++]
+  AA -- no --> AC
+  AB --> AC{CS < routeMinCS?}
+  AC -- yes --> AD[option.setRouteMinCS CS]
+  AC -- no --> AE
+  AD --> AE[emit csSignal CS]
+  AE --> AF([return selectedNeighbor])</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="route">
+  <div class="fn-head">
+    <div class="fn-sig">Result routeDatagram(Packet *datagram, GPSRCSOption *gpsrcsOption)</div>
+    <div class="fn-tags">
+      <span class="tag tag-red">Eavesdropper → DROP immediately</span>
+      <span class="tag tag-red">No next hop → DROP (no wait queue)</span>
+    </div>
+  </div>
+  <div class="fn-body">
+    <p>Top-level routing entry point. Unlike UFRPLS there is <strong>no waiting mechanism</strong>: a missing next hop results in an immediate DROP.</p>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([routeDatagram]) --> B{isEavesdropper?}
+  B -- yes --> C([return DROP])
+  B -- no --> D[get src + dst from networkHeader]
+  D --> E[nextHop = findNextHop destination option]
+  E --> F[addTagIfAbsent NextHopAddressReq nextHop]
+  F --> G{nextHop unspecified?}
+  G -- yes --> H[EV_WARN no next hop]
+  H --> I([return DROP])
+  G -- no --> J[option.setSenderAddress getSelfAddress]
+  J --> K[addTagIfAbsent InterfaceReq outputInterface]
+  K --> L([return ACCEPT])</div></div>
+  </div>
+</div>
+</section>
+
+<!-- NETFILTER HOOKS -->
+<section id="pre-hook">
+<h2 class="sh"><span class="icon">🪝</span>Netfilter Hooks</h2>
+
+<div class="fn-card">
+  <div class="fn-head">
+    <div class="fn-sig">Result datagramPreRoutingHook(Packet *datagram)</div>
+    <div class="fn-tags"><span class="tag tag-blue">Hook: transit packets</span><span class="tag tag-amber">Registered at priority 0</span></div>
+  </div>
+  <div class="fn-body">
+    <p>Fires for every arriving datagram before the routing decision. Local/multicast/broadcast packets accepted immediately; transit packets routed via <code>routeDatagram()</code>.</p>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([datagramPreRoutingHook]) --> B[destination = networkHeader.getDestinationAddress]
+  B --> C{multicast OR broadcast OR local?}
+  C -- yes --> D([return ACCEPT])
+  C -- no --> E[gpsrcsOption = getGPSRCSOptionFromNetworkDatagram]
+  E --> F[routeDatagram datagram option]
+  F --> G([return result])</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="local-in">
+  <div class="fn-head">
+    <div class="fn-sig">Result datagramLocalInHook(Packet *datagram)</div>
+    <div class="fn-tags"><span class="tag tag-green">Statistics emission — packet delivered</span></div>
+  </div>
+  <div class="fn-body">
+    <p>Called when packet reaches its final destination. Emits <code>minCsPerPktSignal</code> (Chai's primary metric) and end-to-end delay. Only fires if <code>routeMinCS &lt; 1e300</code>.</p>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([datagramLocalInHook]) --> B[opt = findGPSRCSOptionInNetworkDatagram]
+  B --> C{opt exists AND routeMinCS < 1e300?}
+  C -- yes --> D[emit minCsPerPktSignal routeMinCS]
+  D --> E[delay = simTime - packet.creationTime]
+  E --> F{delay >= 0?}
+  F -- yes --> G[emit delaySignal delay]
+  C -- no --> H[skip]
+  G --> I([return ACCEPT])
+  H --> I</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="local-out">
+  <div class="fn-head">
+    <div class="fn-sig">Result datagramLocalOutHook(Packet *packet)</div>
+    <div class="fn-tags"><span class="tag tag-blue">Hook: locally generated packets</span></div>
+  </div>
+  <div class="fn-body">
+    <p>Creates a fresh <code>GPSRCSOption</code>, embeds it in the network header, and initiates routing for packets generated by local applications.</p>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([datagramLocalOutHook]) --> B{multicast OR broadcast OR local?}
+  B -- yes --> C([return ACCEPT])
+  B -- no --> D[createGPSRCSOption destination]
+  D --> E[setGPSRCSOptionOnNetworkDatagram]
+  E --> F[routeDatagram packet option]
+  F --> G([return result])</div></div>
+  </div>
+</div>
+</section>
+
+<!-- LIFECYCLE -->
+<section id="start">
+<h2 class="sh"><span class="icon">🔄</span>Lifecycle Operations</h2>
+
+<div class="fn-card">
+  <div class="fn-head"><div class="fn-sig">handleStartOperation()</div></div>
+  <div class="fn-body">
+    <div class="mmd"><div class="mermaid">flowchart LR
+  A([handleStartOperation]) --> B[configureInterfaces]
+  B --> C[storeSelfPositionInGlobalRegistry]
+  C --> D[scheduleBeaconTimer]</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="stop">
+  <div class="fn-head"><div class="fn-sig">handleStopOperation() / handleCrashOperation()</div></div>
+  <div class="fn-body">
+    <div class="alert warn"><strong>No waiting queue:</strong> Unlike UFRPLS, GPSRCS does not maintain a datagram wait queue, so no pending datagrams need to be dropped on shutdown.</div>
+    <div class="mmd"><div class="mermaid">flowchart LR
+  A([handleStop/Crash]) --> B[neighborPositionTable.clear]
+  B --> C[cancelEvent beaconTimer]
+  C --> D[cancelEvent purgeNeighborsTimer]</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="finish">
+  <div class="fn-head">
+    <div class="fn-sig">void finish()</div>
+    <div class="fn-tags"><span class="tag tag-green">Scalar statistics to .sca file</span></div>
+  </div>
+  <div class="fn-body">
+    <p>Records four scalar statistics. Signal-based statistics (mean CS, min CS per packet, mean delay) are computed automatically by INET's <code>@statistic</code> framework.</p>
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Scalar</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>totalHops</code></td><td>Total forwarding decisions (greedy + perimeter)</td></tr>
+        <tr><td><code>secureHops</code></td><td>Hops where measured CS &gt; EPSILON</td></tr>
+        <tr><td><code>globalEavesdropperCount</code></td><td>Eavesdroppers in global table at sim end</td></tr>
+        <tr><td><code>secureHopRatio</code></td><td>secureHops / totalHops (0 if no hops)</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([finish]) --> B[recordScalar totalHops]
+  B --> C[recordScalar secureHops]
+  C --> D[recordScalar globalEavesdropperCount]
+  D --> E["secureRatio = totalHops>0 ? secureHops/totalHops : 0"]
+  E --> F[recordScalar secureHopRatio]
+  F --> G[EV_INFO summary]</div></div>
+  </div>
+</div>
+</section>
+
+<!-- HELPERS -->
+<section id="addresses">
+<h2 class="sh"><span class="icon">🔍</span>Address & Neighbour Helpers</h2>
+
+<div class="fn-card">
+  <div class="fn-head"><div class="fn-sig">getSelfAddress() / getHostName() / getSenderNeighborAddress()</div></div>
+  <div class="fn-body">
+    <div class="fn-meta">
+      <dt>getSelfAddress()</dt><dd>Returns own L3 address; for IPv6 selects preferred unicast from interface table. Called by many methods.</dd>
+      <dt>getHostName()</dt><dd>Returns OMNeT++ full name of host module — used in debug log output.</dd>
+      <dt>getSenderNeighborAddress()</dt><dd>Extracts <code>senderAddress</code> from the embedded <code>GPSRCSOption</code> — provides the address of the previous hop for angle computation in perimeter routing.</dd>
+    </div>
+    <div class="mmd"><div class="mermaid">flowchart TD
+  A([getSelfAddress]) --> B[ret = routingTable->getRouterIdAsGeneric]
+  B --> C{IPv6 type?}
+  C -- yes --> D[for each non-loopback interface with Ipv6Data]
+  D --> E[ret = preferredAddress break]
+  C -- no --> F
+  E --> F([return ret])</div></div>
+  </div>
+</div>
+
+<div class="fn-card" id="neighbor-exp">
+  <div class="fn-head"><div class="fn-sig">getNextNeighborExpiration() / getNeighborPosition()</div></div>
+  <div class="fn-body">
+    <p><code>getNextNeighborExpiration()</code> returns <code>oldestTimestamp + neighborValidityInterval</code>, or <code>MAX_TIME</code> if table is empty. Drives the purge timer.</p>
+    <p><code>getNeighborPosition(address)</code> delegates to <code>neighborPositionTable.getPosition()</code>. Used in perimeter routing.</p>
+  </div>
+</div>
+</section>
+
+<!-- SIGNAL -->
+<section id="signal">
+<h2 class="sh"><span class="icon">📶</span>receiveSignal()</h2>
+<div class="fn-card">
+  <div class="fn-head"><div class="fn-sig">void receiveSignal(source, signalID, obj, details)</div></div>
+  <div class="fn-body">
+    <p>Handles OMNeT++ notification signals. Currently responds to <code>linkBrokenSignal</code> with a warning log only. Removing the broken neighbour from the table is marked as TODO.</p>
+    <div class="mmd"><div class="mermaid">flowchart LR
+  A([receiveSignal]) --> B{signalID == linkBrokenSignal?}
+  B -- yes --> C[EV_WARN Received link break signal]
+  B -- no --> D[ignore]</div></div>
+  </div>
+</div>
+</section>
+
+<!-- COMPARE -->
+<section id="compare">
+<h2 class="sh"><span class="icon">⚖️</span>GPSRCS vs UFRPLS — Key Differences</h2>
+<div class="tbl-wrap">
+<table>
+  <thead><tr><th>Aspect</th><th>GPSRCS (Baseline)</th><th>UFRPLS (PLS-aware)</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Routing criterion</td>
+      <td class="cmp-warn">Distance only (GPSR)</td>
+      <td class="cmp-good">Utility ε = CS^α × d^β</td>
+    </tr>
+    <tr>
+      <td>Greedy constraint</td>
+      <td class="cmp-warn">Must be closer to destination</td>
+      <td class="cmp-good">None — utility guides naturally</td>
+    </tr>
+    <tr>
+      <td>Perimeter fallback</td>
+      <td class="cmp-good">Yes (GG / RNG planarization)</td>
+      <td class="cmp-warn">Removed intentionally</td>
+    </tr>
+    <tr>
+      <td>CS role</td>
+      <td class="cmp-warn">Post-hoc measurement only</td>
+      <td class="cmp-good">Primary routing criterion</td>
+    </tr>
+    <tr>
+      <td>No-hop behaviour</td>
+      <td class="cmp-warn">Immediate DROP</td>
+      <td class="cmp-good">Algorithm 2 exponential backoff wait</td>
+    </tr>
+    <tr>
+      <td>Beacon kinematic data</td>
+      <td>Full (pos + vel + accel + dir)</td>
+      <td>Position only</td>
+    </tr>
+    <tr>
+      <td>Option size</td>
+      <td>Larger (3 positions + 3 addresses for perimeter state)</td>
+      <td>Smaller (destination pos + routeMinCS)</td>
+    </tr>
+    <tr>
+      <td>Shutdown queue drain</td>
+      <td>Not needed (no wait queue)</td>
+      <td>Required (drops all queued datagrams)</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</section>
+
+<footer style="text-align:center; color:var(--text3); font-size:12px; border-top:1px solid var(--border); padding:28px 0 0; margin-top:32px;">
+  Report generated: 2026-07-01 &nbsp;·&nbsp; Author: EL-GHOUCHMA DRISS &nbsp;·&nbsp; GPSRCS Protocol Technical Analysis
+</footer>
+
+</main>
+</div>
+
+<script>
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1c2340',
+    primaryTextColor: '#c9d1d9',
+    primaryBorderColor: '#58a6ff',
+    lineColor: '#58a6ff',
+    secondaryColor: '#21262d',
+    tertiaryColor: '#161b22',
+    edgeLabelBackground: '#161b22',
+    clusterBkg: '#161b22',
+    titleColor: '#c9d1d9',
+    nodeBorder: '#58a6ff',
+    mainBkg: '#21262d',
+    nodeTextColor: '#c9d1d9',
+    fontFamily: 'Cascadia Code, Fira Code, Consolas, monospace',
+    fontSize: '12px',
+  },
+  flowchart: { curve: 'basis', padding: 18 }
+});
+</script>
+</body>
+</html>

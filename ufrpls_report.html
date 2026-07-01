@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UFRPLS Protocol — Comprehensive Technical Report</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #1a1d27;
+    --bg3: #252838;
+    --border: #2e3250;
+    --accent: #6c8ef5;
+    --accent2: #4ecdc4;
+    --accent3: #f7b731;
+    --text: #e0e6f0;
+    --text2: #a0aac0;
+    --code-bg: #12151f;
+    --tag-bg: #1e2540;
+    --success: #43d494;
+    --warn: #f7b731;
+    --danger: #f05a5a;
+    --radius: 10px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.45);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* ── Layout ── */
+  .page-wrapper { display: flex; min-height: 100vh; }
+  nav {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 260px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 24px 0;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+  nav h2 {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding: 0 20px 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  nav a {
+    display: block;
+    padding: 6px 20px;
+    color: var(--text2);
+    text-decoration: none;
+    font-size: 13px;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+  }
+  nav a:hover { color: var(--accent); background: var(--bg3); border-left-color: var(--accent); }
+  nav a.sub { padding-left: 34px; font-size: 12px; }
+  main {
+    margin-left: 260px;
+    flex: 1;
+    max-width: 1100px;
+    padding: 48px 48px 80px;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    background: linear-gradient(135deg, #1a2060 0%, #0d1333 60%, #0f1117 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 40px 44px;
+    margin-bottom: 40px;
+    box-shadow: var(--shadow);
+  }
+  .hero h1 { font-size: 2rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .hero .subtitle { color: var(--accent2); font-size: 1.05rem; margin-bottom: 20px; }
+  .hero .meta { display: flex; flex-wrap: wrap; gap: 16px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+  /* ── Sections ── */
+  section { margin-bottom: 56px; }
+  h2.sec-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--accent);
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 10px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2.sec-title .icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--accent);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 16px; color: #fff; flex-shrink: 0;
+  }
+  h3 { font-size: 1.05rem; color: var(--accent2); margin: 28px 0 12px; font-weight: 600; }
+  h4 { font-size: 0.9rem; color: var(--accent3); margin: 20px 0 8px; font-weight: 600;
+       text-transform: uppercase; letter-spacing: 1px; }
+  p { color: var(--text2); margin-bottom: 12px; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .card-accent { border-left: 3px solid var(--accent); }
+  .card-success { border-left: 3px solid var(--success); }
+  .card-warn { border-left: 3px solid var(--warn); }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; margin: 16px 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead { background: var(--bg3); }
+  th {
+    text-align: left; padding: 10px 14px;
+    color: var(--accent); font-size: 11px;
+    letter-spacing: 1px; text-transform: uppercase;
+    border-bottom: 2px solid var(--border);
+  }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: top; }
+  tr:hover td { background: rgba(108,142,245,0.04); }
+
+  /* ── Code ── */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    margin: 12px 0;
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: #c9d1e6;
+  }
+  code {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 12px;
+    color: #a8d8ea;
+  }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+  /* ── Formula box ── */
+  .formula {
+    background: #0d1333;
+    border: 1px solid #2a3580;
+    border-radius: 8px;
+    padding: 18px 22px;
+    font-family: monospace;
+    font-size: 13px;
+    color: #b0c8f0;
+    margin: 14px 0;
+    line-height: 2;
+  }
+
+  /* ── Mermaid diagrams ── */
+  .mermaid-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin: 16px 0;
+    overflow-x: auto;
+  }
+  .mermaid-wrap .mermaid { min-width: 300px; }
+
+  /* ── Info pills ── */
+  .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+  .pill {
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 3px 12px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .pill.blue { border-color: var(--accent); color: var(--accent); }
+  .pill.green { border-color: var(--success); color: var(--success); }
+  .pill.yellow { border-color: var(--warn); color: var(--warn); }
+  .pill.red { border-color: var(--danger); color: var(--danger); }
+
+  /* ── Method block ── */
+  .method-block {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin: 24px 0;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .method-header {
+    background: var(--bg3);
+    padding: 14px 22px;
+    display: flex; align-items: flex-start; gap: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .method-name { font-family: monospace; font-size: 14px; color: #a8d8ea; font-weight: 600; }
+  .method-body { padding: 18px 22px; }
+  .method-body p { color: var(--text2); }
+  .method-body .grid { display: grid; grid-template-columns: 120px 1fr; gap: 6px 16px; font-size: 13px; }
+  .method-body .grid dt { color: var(--text2); font-weight: 600; }
+  .method-body .grid dd { color: #c0cae0; }
+
+  /* ── Callout ── */
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: rgba(108,142,245,0.07);
+    padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    margin: 14px 0;
+    font-size: 13.5px;
+    color: var(--text2);
+  }
+  .callout.warn { border-color: var(--warn); background: rgba(247,183,49,0.07); }
+  .callout.success { border-color: var(--success); background: rgba(67,212,148,0.07); }
+
+  /* ── TOC numbers ── */
+  .toc-num { color: var(--accent); font-weight: 600; margin-right: 4px; }
+
+  /* ── Stat grid ── */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: 16px 0; }
+  .stat-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+    text-align: center;
+  }
+  .stat-card .stat-value { font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+  .stat-card .stat-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  @media (max-width: 900px) {
+    nav { display: none; }
+    main { margin-left: 0; padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+<!-- ── Navigation ── -->
+<nav>
+  <h2>Navigation</h2>
+  <a href="#overview"><span class="toc-num">1.</span> Protocol Overview</a>
+  <a href="#structure"><span class="toc-num">2.</span> Directory Structure</a>
+  <a href="#defs"><span class="toc-num">3.</span> UFRPLSDefs.h</a>
+  <a href="#postable"><span class="toc-num">4.</span> PositionTable</a>
+  <a class="sub" href="#postable-neighbour">Neighbour Methods</a>
+  <a class="sub" href="#postable-eaves">Eavesdropper Methods</a>
+  <a href="#msg"><span class="toc-num">5.</span> UFRPLS.msg</a>
+  <a href="#ned"><span class="toc-num">6.</span> UFRPLS.ned</a>
+  <a href="#header"><span class="toc-num">7.</span> UFRPLS.h</a>
+  <a href="#impl"><span class="toc-num">8.</span> UFRPLS.cc</a>
+  <a class="sub" href="#fn-init">initialize()</a>
+  <a class="sub" href="#fn-beacon">Beacon Handling</a>
+  <a class="sub" href="#fn-pls">PLS Calculations</a>
+  <a class="sub" href="#fn-nexthop">Next-Hop Selection</a>
+  <a class="sub" href="#fn-route">routeDatagram()</a>
+  <a class="sub" href="#fn-wait">Waiting Mechanism</a>
+  <a class="sub" href="#fn-hooks">Netfilter Hooks</a>
+  <a class="sub" href="#fn-lifecycle">Lifecycle</a>
+  <a href="#interactions"><span class="toc-num">9.</span> Interaction Map</a>
+  <a href="#math"><span class="toc-num">10.</span> Mathematics</a>
+  <a href="#stats"><span class="toc-num">11.</span> Statistics</a>
+</nav>
+
+<!-- ── Main content ── -->
+<main>
+
+<!-- Hero -->
+<div class="hero">
+  <h1>UFRPLS Protocol</h1>
+  <div class="subtitle">Utility-Function Routing with Physical Layer Security for VANETs</div>
+  <div class="meta">
+    <span class="badge"><span class="dot"></span>Author: EL-GHOUCHMA DRISS</span>
+    <span class="badge"><span class="dot" style="background:var(--accent2)"></span>Framework: INET 4.x / OMNeT++ 6.x</span>
+    <span class="badge"><span class="dot" style="background:var(--accent3)"></span>Ref: Chai et al., Electronics 2023</span>
+    <span class="badge"><span class="dot" style="background:var(--success)"></span>Package: vanetsim.routing.ufrpls</span>
+    <span class="badge"><span class="dot" style="background:var(--warn)"></span>Date: 2026-07-01</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section id="overview">
+<h2 class="sec-title"><span class="icon">⚡</span>1. Protocol Overview</h2>
+
+<p>UFRPLS is a <strong>Physical Layer Security (PLS)-aware greedy forwarding protocol</strong> for Vehicular Ad-hoc Networks (VANETs). It extends the classic GPSR protocol by replacing the simple closest-to-destination next-hop criterion with a composite utility function that balances <em>Secrecy Capacity</em> and <em>hop distance</em>.</p>
+
+<div class="card card-accent">
+<h4>Core Algorithm — Key Equations</h4>
+<div class="formula">
+ε_ij  = CS_ij^α × d_ij^β           [Eq.1 — Utility function; α + β = 1]<br>
+C_ij  = log₂(1 + Pt × |h_ij|² / σ²) [Eq.2/3 — Channel capacity, FSPL]<br>
+h_ij  = (λ / (4π × d_ij))²          [Free Space Path Loss channel gain]<br>
+CS_ij = max(C_ij − C_ie, 0)         [Eq.4 — Secrecy Capacity vs. eavesdropper e]<br>
+j*    = argmax{ ε_ij }               [Eq.5 — Optimal next hop selection]
+</div>
+</div>
+
+<div class="callout warn">
+<strong>Waiting Mechanism (Algorithm 2):</strong> When no neighbour with CS &gt; 0 exists, the datagram is queued and reinjected after an exponentially increasing wait window (tw₁ = 130 µs, doubling each retry), bounded by total threshold T = 65 ms. If the threshold is exceeded, the packet continues to be queued and retried (carry-and-forward behaviour).
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="stat-value">200 m</div><div class="stat-label">Communication Range R</div></div>
+  <div class="stat-card"><div class="stat-value">0.5</div><div class="stat-label">Default α (CS weight)</div></div>
+  <div class="stat-card"><div class="stat-value">130 µs</div><div class="stat-label">Initial Wait Window tw₁</div></div>
+  <div class="stat-card"><div class="stat-value">65 ms</div><div class="stat-label">Wait Threshold T</div></div>
+</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section id="structure">
+<h2 class="sec-title"><span class="icon">📁</span>2. Directory Structure</h2>
+<pre><code>vanetsim/routing/ufrpls/
+├── UFRPLSDefs.h              # Constants: ports, PLS params, wait params
+├── UFRPLSPositionTable.h     # Dual-table class header (neighbours + eavesdroppers)
+├── UFRPLSPositionTable.cc    # Dual-table class implementation
+├── UFRPLS.msg                # OMNeT++ message defs (UFRPLSBeacon, UFRPLSOption)
+├── UFRPLS_m.h                # Auto-generated C++ message class declarations
+├── UFRPLS_m.cc               # Auto-generated C++ message class implementations
+├── UFRPLS.ned                # OMNeT++ module description (params, gates, stats)
+├── UFRPLS.h                  # Main protocol class header
+└── UFRPLS.cc                 # Main protocol class implementation (956 lines)</code></pre>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section id="defs">
+<h2 class="sec-title"><span class="icon">🔧</span>3. File: UFRPLSDefs.h</h2>
+<p>Centralises all compile-time constants. Editing one constant propagates throughout the entire protocol without touching any <code>.cc</code> or <code>.h</code> file.</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Constant</th><th>Value</th><th>Unit</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>UFRPLS_UDP_PORT</code></td><td>269</td><td>—</td><td>UDP port for beacon exchange</td></tr>
+<tr><td><code>UFRPLS_TRANSMIT_POWER</code></td><td>0.01</td><td>W</td><td>Transmit power Pt (10 dBm, Table 2)</td></tr>
+<tr><td><code>UFRPLS_NOISE_POWER</code></td><td>3.981e-21</td><td>W</td><td>AWGN noise σ² (−174 dBm)</td></tr>
+<tr><td><code>UFRPLS_WAVELENGTH</code></td><td>0.05085</td><td>m</td><td>Carrier wavelength at 5.9 GHz</td></tr>
+<tr><td><code>UFRPLS_DEFAULT_ALPHA</code></td><td>0.5</td><td>—</td><td>CS weight in utility function</td></tr>
+<tr><td><code>UFRPLS_DEFAULT_BETA</code></td><td>0.5</td><td>—</td><td>Distance weight (= 1 − α)</td></tr>
+<tr><td><code>UFRPLS_INITIAL_WAIT_WINDOW</code></td><td>0.000130</td><td>s</td><td>tw₁ = 130 µs, Algorithm 2</td></tr>
+<tr><td><code>UFRPLS_WAIT_THRESHOLD</code></td><td>0.065</td><td>s</td><td>T = 65 ms, max total wait</td></tr>
+<tr><td><code>UFRPLS_EPSILON</code></td><td>1e-9</td><td>—</td><td>Guard: avoid 0^α in utility</td></tr>
+</tbody>
+</table>
+</div>
+<div class="pill-row">
+  <span class="pill blue">Header-only</span>
+  <span class="pill">Included by UFRPLS.h, UFRPLS_m.h</span>
+  <span class="pill green">No external dependencies</span>
+</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section id="postable">
+<h2 class="sec-title"><span class="icon">🗺️</span>4. UFRPLSPositionTable (Header + Impl)</h2>
+
+<p>Provides a <strong>dual-table data structure</strong> that maps <code>L3Address</code> → <code>(simtime_t, Coord)</code> for both legitimate neighbours and known eavesdroppers. The eavesdropper table is the key PLS addition over standard GPSR.</p>
+
+<div class="card">
+<h4>Private Members</h4>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Member</th><th>Type</th><th>Role</th></tr></thead>
+<tbody>
+<tr><td><code>addressToPositionMap</code></td><td><code>map&lt;L3Address, pair&lt;simtime_t,Coord&gt;&gt;</code></td><td>Legitimate neighbours (existing GPSR)</td></tr>
+<tr><td><code>eavesdropperMap</code></td><td><code>map&lt;L3Address, pair&lt;simtime_t,Coord&gt;&gt;</code></td><td>Known eavesdroppers (PLS addition)</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<h3 id="postable-neighbour">Neighbour Table Methods</h3>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">getAddresses() → vector&lt;L3Address&gt;</div>
+      <div class="pill-row"><span class="pill blue">const</span><span class="pill">Called by: findGreedyRoutingNextHop()</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Returns all known legitimate neighbour addresses by iterating <code>addressToPositionMap</code>.</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart LR
+  A([getAddresses]) --> B[iterate addressToPositionMap]
+  B --> C[push key into vector]
+  C --> D([return vector])
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">getPosition(address) → Coord</div>
+      <div class="pill-row"><span class="pill blue">const</span><span class="pill">Called by: findGreedyRoutingNextHop()</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Returns last-known position of <code>address</code>, or <code>(NaN, NaN, NaN)</code> if not in map.</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart LR
+  A([getPosition]) --> B{found in map?}
+  B -- yes --> C([return Coord])
+  B -- no --> D([return NaN Coord])
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">setPosition(address, coord)</div>
+      <div class="pill-row"><span class="pill yellow">mutating</span><span class="pill">Called by: processBeacon() — legitimate beacons</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Inserts or updates a neighbour entry with <code>simTime()</code> as the freshness timestamp.</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart LR
+  A([setPosition]) --> B[ASSERT address not unspecified]
+  B --> C[map insert/update: addr → simTime, coord]
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">removeOldPositions(timestamp)</div>
+      <div class="pill-row"><span class="pill yellow">mutating</span><span class="pill">Called by: purgeNeighbors()</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Purges entries whose stored timestamp ≤ <code>timestamp</code> (i.e., older than the validity window).</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+  A([removeOldPositions]) --> B[for each entry in map]
+  B --> C{entry.time <= timestamp?}
+  C -- yes --> D[erase entry]
+  C -- no --> E[keep, next]
+  D --> B
+  E --> B
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">getOldestPosition() → simtime_t</div>
+      <div class="pill-row"><span class="pill blue">const</span><span class="pill">Called by: getNextNeighborExpiration()</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Scans all neighbour entries and returns the minimum timestamp, used to schedule the purge timer.</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+  A([getOldestPosition]) --> B[init oldest = MAX_TIME]
+  B --> C[for each neighbour]
+  C --> D{time < oldest?}
+  D -- yes --> E[oldest = time]
+  D -- no --> F[next]
+  E --> F --> C
+  C --> G([return oldest])
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3 id="postable-eaves">Eavesdropper Table Methods (PLS Addition)</h3>
+
+<div class="callout">
+The eavesdropper table mirrors the neighbour table but is populated only from beacons with <code>isEavesdropper=true</code>. Both <code>neighborPositionTable</code> (per-node) and <code>globalPositionTable</code> (simulation-wide static) use this structure.
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">addEavesdropper(address, position)</div>
+      <div class="pill-row"><span class="pill yellow">mutating</span><span class="pill">Called by: processBeacon() when isEavesdropper==true</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Inserts or refreshes an eavesdropper entry with current simulation time. Called on <em>both</em> the local and global tables.</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart LR
+  A([addEavesdropper]) --> B[ASSERT not unspecified]
+  B --> C[eavesdropperMap insert/update: addr → simTime, pos]
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">getEavesdropperAddresses() → vector&lt;L3Address&gt;</div>
+      <div class="pill-row"><span class="pill blue">const</span><span class="pill">Called by: calculateSecrecyCapacity(), finish()</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Returns all known eavesdropper addresses for iteration in the CS calculation loop.</p>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">getEavesdropperPosition(address) → Coord</div>
+      <div class="pill-row"><span class="pill blue">const</span><span class="pill">Called by: calculateSecrecyCapacity()</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Returns the geographic position of a known eavesdropper for channel capacity computation.</p>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">removeOldEavesdroppers(timestamp)</div>
+      <div class="pill-row"><span class="pill yellow">mutating</span><span class="pill">Called by: purgeNeighbors()</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Purges stale eavesdropper entries using the same timestamp-based mechanism as the neighbour table.</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+  A([removeOldEavesdroppers]) --> B[for each entry in eavesdropperMap]
+  B --> C{entry.time <= timestamp?}
+  C -- yes --> D[erase]
+  C -- no --> E[next]
+  D --> B
+  E --> B
+      </div>
+    </div>
+  </div>
+</div>
+
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section id="msg">
+<h2 class="sec-title"><span class="icon">✉️</span>5. UFRPLS.msg</h2>
+<p>Processed by <code>opp_msgc</code> to auto-generate <code>UFRPLS_m.h</code> / <code>UFRPLS_m.cc</code>. Defines two packet structures.</p>
+
+<h3>UFRPLSBeacon (extends FieldsChunk)</h3>
+<p>Periodically broadcast by every vehicle. The <code>eavesdropper</code> flag is the core PLS extension.</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>address</code></td><td>L3Address</td><td>—</td><td>Sender's network address</td></tr>
+<tr><td><code>position</code></td><td>Coord</td><td>—</td><td>Sender's current geographic position</td></tr>
+<tr><td><code>eavesdropper</code></td><td>bool</td><td>false</td><td><strong>PLS:</strong> true → record sender in eavesdropper table</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>UFRPLSOption (extends TlvOptionBase)</h3>
+<p>Attached to each data packet as a network header option, carrying per-route PLS state.</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>routingMode</code></td><td>UFRPLSForwardingMode</td><td>-1</td><td>Always UFRPLS_GREEDY_ROUTING (1)</td></tr>
+<tr><td><code>destinationPosition</code></td><td>Coord</td><td>—</td><td>Geographic position of final destination</td></tr>
+<tr><td><code>routeMinCS</code></td><td>double</td><td>1e300</td><td>Minimum CS observed over all hops so far</td></tr>
+</tbody>
+</table>
+</div>
+<div class="callout success"><code>routeMinCS</code> accumulates the worst-case secrecy capacity across all hops per packet — this is the primary metric of Chai et al. (Section 4, Figs 3–7). It is emitted at packet delivery via <code>minCsPerPktSignal</code>.</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section id="ned">
+<h2 class="sec-title"><span class="icon">🏗️</span>6. UFRPLS.ned</h2>
+
+<h3>Module Parameters</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>interfaceTableModule</code></td><td>string</td><td>—</td><td>Path to InterfaceTable submodule</td></tr>
+<tr><td><code>routingTableModule</code></td><td>string</td><td><code>^.ipv4.routingTable</code></td><td>Routing table path</td></tr>
+<tr><td><code>networkProtocolModule</code></td><td>string</td><td><code>^.ipv4.ip</code></td><td>IP module (for netfilter hooks)</td></tr>
+<tr><td><code>outputInterface</code></td><td>string</td><td><code>wlan0</code></td><td>Output interface name</td></tr>
+<tr><td><code>beaconInterval</code></td><td>double (s)</td><td>10s</td><td>Beacon transmission period</td></tr>
+<tr><td><code>maxJitter</code></td><td>double (s)</td><td>0.5×beaconInterval</td><td>Max random jitter on beacon timer</td></tr>
+<tr><td><code>neighborValidityInterval</code></td><td>double (s)</td><td>4.5×beaconInterval</td><td>Neighbour entry TTL</td></tr>
+<tr><td><code>alpha</code></td><td>double</td><td>0.5</td><td>CS weight α in utility function</td></tr>
+<tr><td><code>transmitPower</code></td><td>double</td><td>0.01</td><td>Pt in watts</td></tr>
+<tr><td><code>noisePower</code></td><td>double</td><td>3.981e-21</td><td>σ² in watts</td></tr>
+<tr><td><code>wavelength</code></td><td>double</td><td>0.05085</td><td>λ in meters</td></tr>
+<tr><td><code>initialWaitWindow</code></td><td>double (s)</td><td>0.000130</td><td>tw₁ = 130 µs</td></tr>
+<tr><td><code>waitThreshold</code></td><td>double (s)</td><td>0.065</td><td>T = 65 ms</td></tr>
+<tr><td><code>isEavesdropper</code></td><td>bool</td><td>false</td><td>Set true in .ini to mark as eavesdropper</td></tr>
+<tr><td><code>displayBubbles</code></td><td>bool</td><td>false</td><td>Show GUI routing bubbles</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Gates</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Gate</th><th>Direction</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>socketIn</code></td><td>input</td><td>Receives from network layer</td></tr>
+<tr><td><code>socketOut</code></td><td>output</td><td>Sends to network layer</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Declared Statistics</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Signal</th><th>Record</th><th>Unit</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>secrecyCapacity</code></td><td>stats, vector</td><td>bps/Hz</td><td>CS at each greedy hop</td></tr>
+<tr><td><code>minSecrecyCapacityPerPacket</code></td><td>stats, vector</td><td>bps/Hz</td><td>Worst hop CS per delivered packet</td></tr>
+<tr><td><code>endToEndDelay</code></td><td>mean, vector</td><td>s</td><td>Creation-to-delivery delay</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section id="header">
+<h2 class="sec-title"><span class="icon">📋</span>7. UFRPLS.h — Class Declaration</h2>
+
+<p>Declares the <code>UFRPLS</code> class with three base classes:</p>
+<div class="pill-row">
+  <span class="pill blue">RoutingProtocolBase</span>
+  <span class="pill blue">cListener</span>
+  <span class="pill blue">NetfilterBase::HookBase</span>
+</div>
+
+<h3>Key Private Members</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Member</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>globalPositionTable</code></td><td>UFRPLSPositionTable (static)</td><td>Simulation-wide registry for all nodes + eavesdroppers</td></tr>
+<tr><td><code>neighborPositionTable</code></td><td>UFRPLSPositionTable</td><td>Per-node local neighbour/eavesdropper table</td></tr>
+<tr><td><code>waitingDatagrams</code></td><td>map&lt;Packet*, WaitingState&gt;</td><td>Algorithm 2 per-datagram waiting state</td></tr>
+<tr><td><code>alpha</code></td><td>double</td><td>CS weight α (default 0.5)</td></tr>
+<tr><td><code>beta</code></td><td>double</td><td>Distance weight β = 1−α</td></tr>
+<tr><td><code>transmitPower</code></td><td>double</td><td>Pt in watts</td></tr>
+<tr><td><code>noisePower</code></td><td>double</td><td>σ² in watts</td></tr>
+<tr><td><code>wavelength</code></td><td>double</td><td>λ in meters</td></tr>
+<tr><td><code>totalHops / secureHops</code></td><td>int</td><td>Scalar statistics counters</td></tr>
+<tr><td><code>csSignal / minCsPerPktSignal / delaySignal</code></td><td>simsignal_t</td><td>OMNeT++ signal handles</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>WaitingState Struct</h3>
+<pre><code>struct WaitingState {
+    double currentWindow = 0.0;  // current backoff window tw (s)
+    double totalWaited   = 0.0;  // accumulated waiting time so far (s)
+};</code></pre>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section id="impl">
+<h2 class="sec-title"><span class="icon">⚙️</span>8. UFRPLS.cc — Function-by-Function Analysis</h2>
+
+<div class="callout warn"><strong>Static constant:</strong> <code>COMM_RANGE_M = 200.0</code> m — enforces Chai Table 2 communication range. Neighbours farther than 200 m are excluded from next-hop selection.</div>
+
+<!-- initialize -->
+<h3 id="fn-init">Initialisation</h3>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">initialize(int stage)</div>
+      <div class="pill-row"><span class="pill">Two-stage OMNeT++ init</span><span class="pill blue">Called by: framework</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p><strong>Stage LOCAL:</strong> Reads all NED parameters, resolves module pointers, allocates timers, registers statistic signals, clears <code>globalPositionTable</code>.</p>
+    <p><strong>Stage ROUTING_PROTOCOLS:</strong> Registers MANET protocol, subscribes to <code>linkBrokenSignal</code>, registers netfilter hook, enables GUI WATCH.</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+  A([initialize stage]) --> B{stage == LOCAL?}
+  B -- yes --> C[read NED params into members]
+  C --> D[resolve host/mobility/interfaceTable/routingTable/networkProtocol]
+  D --> E[create beaconTimer + purgeNeighborsTimer]
+  E --> F[init totalHops=0 secureHops=0]
+  F --> G[register csSignal minCsPerPktSignal delaySignal]
+  G --> H[globalPositionTable.clear]
+  B -- no --> I{stage == ROUTING_PROTOCOLS?}
+  I -- yes --> J[registerService/registerProtocol manet]
+  J --> K[host->subscribe linkBrokenSignal]
+  K --> L[networkProtocol->registerHook 0 this]
+  L --> M[WATCH neighborPositionTable]
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">handleMessageWhenUp(cMessage *message)</div>
+      <div class="pill-row"><span class="pill">Message dispatcher</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart LR
+  A([handleMessageWhenUp]) --> B{isSelfMessage?}
+  B -- yes --> C[processSelfMessage]
+  B -- no --> D[processMessage]
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">processSelfMessage(cMessage *message)</div>
+    </div>
+  </div>
+  <div class="method-body">
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+  A([processSelfMessage]) --> B{== beaconTimer?}
+  B -- yes --> C[processBeaconTimer]
+  B -- no --> D{== purgeNeighborsTimer?}
+  D -- yes --> E[processPurgeNeighborsTimer]
+  D -- no --> F{contextPointer != null?}
+  F -- yes --> G[processWaitingRetryTimer]
+  F -- no --> H[throw cRuntimeError]
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Beacon handling -->
+<h3 id="fn-beacon">Beacon Handling</h3>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">createBeacon() → Ptr&lt;UFRPLSBeacon&gt;</div>
+      <div class="pill-row"><span class="pill blue">Called by: processBeaconTimer()</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Allocates a <code>UFRPLSBeacon</code> with this node's address, current position, and the <code>isEavesdropper</code> NED parameter flag.</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart LR
+  A([createBeacon]) --> B[makeShared UFRPLSBeacon]
+  B --> C[setAddress getSelfAddress]
+  C --> D[setPosition mobility->getCurrentPosition]
+  D --> E[setChunkLength addr+pos bytes]
+  E --> F[setEavesdropper par isEavesdropper]
+  F --> G([return beacon])
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">sendBeacon(const Ptr&lt;UFRPLSBeacon&gt;&amp; beacon)</div>
+      <div class="pill-row"><span class="pill blue">Called by: processBeaconTimer()</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Wraps beacon in a UDP packet (port 269), sets MANET multicast destination, hop limit 255, and sends via <code>socketOut</code>.</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+  A([sendBeacon]) --> B[new Packet UFRPLSBeacon]
+  B --> C[insertAtBack beacon chunk]
+  C --> D[makeShared UdpHeader src=dst=269]
+  D --> E[insertAtFront udpHeader]
+  E --> F[addTag L3AddressReq: src=self dst=MANET multicast]
+  F --> G[addTag HopLimitReq 255]
+  G --> H[addTag PacketProtocolTag manet]
+  H --> I[sendUdpPacket]
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">processBeacon(Packet *packet)</div>
+      <div class="pill-row"><span class="pill yellow">PLS extension</span><span class="pill blue">Called by: processUdpPacket()</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>The central PLS branching point: eavesdropper beacons are stored in <em>both</em> local and global eavesdropper tables; legitimate beacons update the local neighbour table only.</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+  A([processBeacon]) --> B[peek UFRPLSBeacon from packet]
+  B --> C{isEavesdropper?}
+  C -- yes --> D[neighborPositionTable.addEavesdropper addr pos]
+  D --> E[globalPositionTable.addEavesdropper addr pos]
+  E --> F[EV_INFO eavesdropper recorded local+global]
+  C -- no --> G[neighborPositionTable.setPosition addr pos]
+  G --> H[EV_INFO neighbor updated]
+  F --> I[delete packet]
+  H --> I
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLS Calculations -->
+<h3 id="fn-pls">PLS Channel Calculations</h3>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">calculateChannelCapacity(senderPos, receiverPos) → double</div>
+      <div class="pill-row"><span class="pill blue">const</span><span class="pill green">Eq. 2/3 — Chai 2023</span><span class="pill">Called by: calculateSecrecyCapacity()</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Implements Shannon capacity under Free Space Path Loss. Distance is clamped to ≥ 1.0 m to avoid division-by-zero at co-located nodes.</p>
+    <div class="formula">
+d         = ||receiverPos − senderPos||  (min 1.0 m)<br>
+pathLoss  = λ / (4π × d)<br>
+|h|²      = pathLoss²<br>
+SNR       = Pt × |h|² / σ²<br>
+C         = log₂(1 + SNR)
+    </div>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+  A([calculateChannelCapacity]) --> B[d = Euclidean distance]
+  B --> C{d < 1.0?}
+  C -- yes --> D[d = 1.0]
+  C -- no --> E
+  D --> E[pathLoss = wavelength / 4pi*d]
+  E --> F[channelGain = pathLoss^2]
+  F --> G[SNR = transmitPower * channelGain / noisePower]
+  G --> H([return log2 1+SNR])
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">calculateSecrecyCapacity(senderPos, nextHopPos) → double</div>
+      <div class="pill-row"><span class="pill blue">const</span><span class="pill green">Eq. 4 — Chai 2023</span><span class="pill yellow">Uses globalPositionTable</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Computes the worst-case Secrecy Capacity of the sender→nextHop link against <em>all</em> known eavesdroppers. Uses <code>globalPositionTable</code> (not local) so that nodes outside the eavesdropper's radio range still compute correct CS values — this is mandated by Chai et al.'s global knowledge assumption.</p>
+    <div class="formula">
+C_ij  = calculateChannelCapacity(sender, nextHop)<br>
+for each eavesdropper e in globalPositionTable:<br>
+&nbsp;&nbsp;C_ie = calculateChannelCapacity(sender, e_pos)<br>
+&nbsp;&nbsp;CS   = max(C_ij − C_ie, 0)<br>
+return min(CS over all e)  [worst-case multi-eavesdropper]
+    </div>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+  A([calculateSecrecyCapacity]) --> B[Cij = calculateChannelCapacity sender nextHop]
+  B --> C[eavesdroppers = globalPositionTable.getEavesdropperAddresses]
+  C --> D{list empty?}
+  D -- yes --> E([return Cij])
+  D -- no --> F[minCS = Cij]
+  F --> G[for each eavesdropper e]
+  G --> H[ePos = getEavesdropperPosition e]
+  H --> I[Cie = calculateChannelCapacity sender ePos]
+  I --> J[CS = max Cij-Cie, 0.0]
+  J --> K{CS < minCS?}
+  K -- yes --> L[minCS = CS]
+  K -- no --> M[next e]
+  L --> M --> G
+  G --> N([return minCS])
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Next-Hop -->
+<h3 id="fn-nexthop">Next-Hop Selection</h3>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">findGreedyRoutingNextHop(destination, ufrplsOption) → L3Address</div>
+      <div class="pill-row"><span class="pill green">Core Algorithm — Chai Alg.1 + Eq.1,4,5</span><span class="pill yellow">Range = 200 m</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Implements the full utility-based next-hop selection in a <strong>single pass</strong> over all neighbours:</p>
+    <ol style="margin:10px 0 10px 20px; color:var(--text2); font-size:13.5px; line-height:1.9;">
+      <li>Filter by communication range R = 200 m</li>
+      <li>Compute CS via <code>calculateSecrecyCapacity()</code></li>
+      <li>Skip candidates with CS ≤ EPSILON</li>
+      <li>Compute utility <code>ε = CS^α × d^β</code> (inlined)</li>
+      <li>Track best (highest utility) candidate</li>
+      <li>Emit <code>csSignal</code> and update <code>routeMinCS</code></li>
+    </ol>
+    <div class="callout">The standard GPSR "closer to destination" geographic filter is intentionally absent — Chai Algorithm 1 does not use it. The utility function naturally guides packets forward because larger d_ij increases ε_ij when β &gt; 0.</div>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+  A([findGreedyRoutingNextHop]) --> B[selfPos = mobility->getCurrentPosition]
+  B --> C[init bestAddr=unspec, bestUtil=-1, foundAny=false, foundSecure=false]
+  C --> D[for each neighbor in neighborPositionTable]
+  D --> E[neighborPos = getPosition]
+  E --> F[hopDist = Euclidean distance]
+  F --> G{hopDist > 200m?}
+  G -- yes --> H[skip, next]
+  G -- no --> I[foundAny = true]
+  I --> J[CS = calculateSecrecyCapacity selfPos neighborPos]
+  J --> K{CS <= EPSILON?}
+  K -- yes --> H
+  K -- no --> L[foundSecure = true]
+  L --> M[d = max hopDist 1.0]
+  M --> N[utility = pow CS alpha × pow d beta]
+  N --> O{utility > bestUtility?}
+  O -- yes --> P[bestUtility=utility, bestCS=CS, bestAddr=neighbor]
+  O -- no --> H
+  P --> H --> D
+  D --> Q{foundAny?}
+  Q -- no --> R([return unspecified])
+  Q -- yes --> S{foundSecure?}
+  S -- no --> T([return unspecified])
+  S -- yes --> U[totalHops++, secureHops++]
+  U --> V[emit csSignal bestCS]
+  V --> W{bestCS < routeMinCS?}
+  W -- yes --> X[setRouteMinCS bestCS]
+  W -- no --> Y
+  X --> Y([return bestAddr])
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- routeDatagram -->
+<h3 id="fn-route">Datagram Routing</h3>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">routeDatagram(Packet *datagram, UFRPLSOption *option) → Result</div>
+      <div class="pill-row"><span class="pill">Top-level routing decision</span><span class="pill red">Eavesdropper → DROP</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+  A([routeDatagram]) --> B{par isEavesdropper?}
+  B -- yes --> C([return DROP])
+  B -- no --> D[extract src + dst from network header]
+  D --> E[nextHop = findNextHop dst option]
+  E --> F{nextHop unspecified?}
+  F -- yes --> G[queueForWaiting datagram]
+  G --> H[bubble: Waiting for secure hop]
+  H --> I([return QUEUE])
+  F -- no --> J[clearWaitingState datagram]
+  J --> K[addTag NextHopAddressReq nextHop]
+  K --> L[addTag InterfaceReq outputInterface]
+  L --> M([return ACCEPT])
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Waiting Mechanism -->
+<h3 id="fn-wait">Waiting Mechanism (Algorithm 2)</h3>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">queueForWaiting(Packet *datagram) → Result</div>
+      <div class="pill-row"><span class="pill green">Algorithm 2 — Exponential Backoff</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Implements the exponential-backoff waiting mechanism. On first call for a datagram, initialises window to tw₁. On each subsequent call, doubles the window. Schedules a <code>WaitingRetryTimer</code> that will reinject the datagram. Always returns <code>QUEUE</code>.</p>
+    <div class="formula">
+tw₁ = 130 µs   (initial window)<br>
+T   = 65 ms    (total budget)<br>
+<br>
+if currentWindow == 0: init tw = tw₁<br>
+if totalWaited + tw &gt; T: clamp tw to remaining budget<br>
+schedule reinject in tw seconds<br>
+totalWaited += tw<br>
+currentWindow *= 2
+    </div>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+  A([queueForWaiting]) --> B[get or create WaitingState for datagram]
+  B --> C{currentWindow == 0?}
+  C -- yes --> D[currentWindow = tw1, totalWaited = 0]
+  C -- no --> E
+  D --> E{totalWaited + window > threshold T?}
+  E -- yes --> F[clamp: window = T - totalWaited]
+  F --> G{window <= 0?}
+  G -- yes --> H[reset window = tw1]
+  G -- no --> I
+  E -- no --> I
+  H --> I[delay = currentWindow]
+  I --> J[totalWaited += delay]
+  J --> K[currentWindow *= 2 exponential backoff]
+  K --> L[create WaitingRetryTimer with datagram as context]
+  L --> M[scheduleAt simTime + delay]
+  M --> N([return QUEUE])
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">processWaitingRetryTimer(cMessage *message)</div>
+      <div class="pill-row"><span class="pill blue">Called by: processSelfMessage() when contextPointer != null</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Retrieves the queued datagram from the timer's context pointer and reinjects it into the network layer for a fresh routing attempt.</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart LR
+  A([processWaitingRetryTimer]) --> B[datagram = contextPointer]
+  B --> C[delete timer]
+  C --> D{datagram != null?}
+  D -- yes --> E[networkProtocol->reinjectQueuedDatagram]
+  D -- no --> F[return]
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hooks -->
+<h3 id="fn-hooks">Netfilter Hooks</h3>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">datagramPreRoutingHook(Packet *datagram) → Result</div>
+      <div class="pill-row"><span class="pill">Transit packets</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Intercepts every incoming datagram before routing. Local/multicast/broadcast destinations are accepted immediately. Transit packets are routed via <code>routeDatagram()</code>.</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+  A([datagramPreRoutingHook]) --> B[get destination address]
+  B --> C{multicast OR broadcast OR local?}
+  C -- yes --> D([return ACCEPT])
+  C -- no --> E[getUFRPLSOption from header]
+  E --> F[routeDatagram]
+  F --> G([return result])
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">datagramLocalInHook(Packet *datagram) → Result</div>
+      <div class="pill-row"><span class="pill green">Statistics emission — packet delivered</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Called when a packet reaches its final destination. Emits <code>minCsPerPktSignal</code> (Chai's primary metric) and end-to-end delay.</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+  A([datagramLocalInHook]) --> B[findUFRPLSOption in header]
+  B --> C{opt exists AND routeMinCS < 1e300?}
+  C -- yes --> D[emit minCsPerPktSignal routeMinCS]
+  D --> E[delay = simTime - creationTime]
+  E --> F{delay >= 0?}
+  F -- yes --> G[emit delaySignal delay]
+  C -- no --> H[skip]
+  G --> I([return ACCEPT])
+  H --> I
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">datagramLocalOutHook(Packet *packet) → Result</div>
+      <div class="pill-row"><span class="pill">Locally-generated packets</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Attaches a fresh <code>UFRPLSOption</code> to every packet generated by a local application and initiates the first routing decision.</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+  A([datagramLocalOutHook]) --> B{multicast OR broadcast OR local?}
+  B -- yes --> C([return ACCEPT])
+  B -- no --> D[createUFRPLSOption destination]
+  D --> E[setUFRPLSOptionOnNetworkDatagram]
+  E --> F[routeDatagram]
+  F --> G([return result])
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Lifecycle -->
+<h3 id="fn-lifecycle">Lifecycle & Statistics</h3>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">handleStartOperation()</div>
+    </div>
+  </div>
+  <div class="method-body">
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart LR
+  A([handleStartOperation]) --> B[configureInterfaces]
+  B --> C[storeSelfPositionInGlobalRegistry]
+  C --> D[scheduleBeaconTimer]
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">handleStopOperation() / handleCrashOperation()</div>
+    </div>
+  </div>
+  <div class="method-body">
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart LR
+  A([handleStop/Crash]) --> B[dropQueuedDatagram for each waiting packet]
+  B --> C[waitingDatagrams.clear]
+  C --> D[neighborPositionTable.clear]
+  D --> E[cancelEvent beaconTimer]
+  E --> F[cancelEvent purgeNeighborsTimer]
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="method-block">
+  <div class="method-header">
+    <div>
+      <div class="method-name">finish()</div>
+      <div class="pill-row"><span class="pill green">Scalar statistics output</span></div>
+    </div>
+  </div>
+  <div class="method-body">
+    <p>Records end-of-simulation scalar statistics. Signal-based statistics (mean/vector) are computed automatically by INET.</p>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+  A([finish]) --> B[recordScalar totalHops]
+  B --> C[recordScalar secureHops]
+  C --> D[recordScalar globalEavesdropperCount]
+  D --> E[secureRatio = secureHops / totalHops]
+  E --> F[recordScalar secureHopRatio]
+  F --> G[EV_INFO summary]
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section id="interactions">
+<h2 class="sec-title"><span class="icon">🔗</span>9. Cross-Component Interaction Map</h2>
+<div class="mermaid-wrap">
+  <div class="mermaid">
+graph TD
+  NED[UFRPLS.ned<br/>parameters &amp; stats] -->|configures| CC[UFRPLS.cc<br/>main logic]
+  MSG[UFRPLS.msg<br/>message defs] -->|opp_msgc generates| MH[UFRPLS_m.h/cc<br/>UFRPLSBeacon, UFRPLSOption]
+  MH -->|used by| CC
+  DEFS[UFRPLSDefs.h<br/>constants] -->|included by| CC
+  DEFS -->|included by| MH
+  PT[UFRPLSPositionTable.h/cc<br/>dual table] -->|neighbor/eavesdropper lookup| CC
+
+  subgraph Per-Node-Instance
+    CC
+    LOCAL[neighborPositionTable<br/>per-node]
+  end
+  subgraph Simulation-Wide
+    GLOBAL[globalPositionTable<br/>static — all nodes share]
+  end
+
+  CC -->|setPosition/addEavesdropper| LOCAL
+  CC -->|addEavesdropper/getEavesdropperAddresses| GLOBAL
+  CC -->|netfilter hooks| NL[Network Layer IP]
+  CC -->|UDP beacon send/recv| MANET[MANET Multicast 224.0.0.109]
+  CC -->|emit signals| STATS[OMNeT++ Statistics Engine<br/>.sca / .vec files]
+  CC -->|scheduleAt/cancelEvent| TIMERS[beaconTimer<br/>purgeNeighborsTimer<br/>WaitingRetryTimers]
+      </div>
+</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section id="math">
+<h2 class="sec-title"><span class="icon">📐</span>10. Mathematical Foundations</h2>
+
+<h3>Utility Function (Eq. 1)</h3>
+<div class="formula">
+ε_ij = CS_ij^α × d_ij^β,   α + β = 1,   default α = β = 0.5<br><br>
+Higher α → favour security (CS)<br>
+Higher β → favour geographic progress (distance d)
+</div>
+
+<h3>Channel Capacity (Eq. 2–3)</h3>
+<div class="formula">
+h_ij     = λ / (4π × d_ij)          [FSPL amplitude response]<br>
+SNR_ij   = Pt × h_ij² / σ²<br>
+C_ij     = log₂(1 + SNR_ij)         [bits/s/Hz]<br><br>
+Pt = 0.01 W  (10 dBm)<br>
+σ² = 3.981×10⁻²¹ W  (−174 dBm)<br>
+λ  = 0.05085 m  (5.9 GHz VANET band)
+</div>
+
+<h3>Secrecy Capacity (Eq. 4)</h3>
+<div class="formula">
+CS_ij = max(C_ij − C_ie, 0)              [vs. single eavesdropper e]<br>
+CS_ij = min_e{ max(C_ij − C_ie, 0) }    [worst-case multi-eavesdropper]<br><br>
+CS > 0  ⟹  physical layer secrecy is achievable on this link<br>
+CS = 0  ⟹  eavesdropper has equal or better channel; link is insecure
+</div>
+
+<h3>Algorithm 2: Exponential-Backoff Waiting</h3>
+<div class="formula">
+tw₁ = 130 µs   (initial window)<br>
+T   = 65 ms    (total threshold)<br><br>
+Round k:  delay_k = tw₁ × 2^(k-1)<br>
+Cumulative after k rounds: tw₁ × (2^k − 1)<br><br>
+When totalWaited + delay > T:<br>
+  clamp delay to T − totalWaited (carry-and-forward; packet not dropped)
+</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section id="stats">
+<h2 class="sec-title"><span class="icon">📊</span>11. Statistics &amp; Observability</h2>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Statistic</th><th>Signal / Source</th><th>Type</th><th>Unit</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>secrecyCapacity</code></td><td><code>csSignal</code></td><td>vector, stats</td><td>bps/Hz</td><td>CS value at each greedy hop selection</td></tr>
+<tr><td><code>minSecrecyCapacityPerPacket</code></td><td><code>minCsPerPktSignal</code></td><td>vector, stats</td><td>bps/Hz</td><td>Worst-case CS hop per delivered packet (Chai primary metric)</td></tr>
+<tr><td><code>endToEndDelay</code></td><td><code>delaySignal</code></td><td>mean, vector</td><td>s</td><td>Packet creation-to-delivery time</td></tr>
+<tr><td><code>totalHops</code></td><td>scalar</td><td>scalar</td><td>—</td><td>Total greedy forwarding decisions</td></tr>
+<tr><td><code>secureHops</code></td><td>scalar</td><td>scalar</td><td>—</td><td>Hops where CS &gt; 0</td></tr>
+<tr><td><code>secureHopRatio</code></td><td>derived scalar</td><td>scalar</td><td>—</td><td>secureHops / totalHops</td></tr>
+<tr><td><code>globalEavesdropperCount</code></td><td>scalar</td><td>scalar</td><td>—</td><td>Number of known eavesdroppers at simulation end</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout success">
+Signal-based statistics (<code>secrecyCapacity</code>, <code>minSecrecyCapacityPerPacket</code>, <code>endToEndDelay</code>) are computed automatically by the INET <code>@statistic</code> framework from emitted signals. No manual accumulation is required in C++ code.
+</div>
+</section>
+
+<div style="text-align:center; color:var(--text2); font-size:12px; padding: 32px 0; border-top:1px solid var(--border); margin-top:40px;">
+  Report generated: 2026-07-01 &nbsp;·&nbsp; Author: EL-GHOUCHMA DRISS &nbsp;·&nbsp; UFRPLS Protocol Technical Analysis
+</div>
+
+</main>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#1a2060',
+      primaryTextColor: '#e0e6f0',
+      primaryBorderColor: '#6c8ef5',
+      lineColor: '#6c8ef5',
+      secondaryColor: '#252838',
+      tertiaryColor: '#1a1d27',
+      edgeLabelBackground: '#1a1d27',
+      clusterBkg: '#1a1d27',
+      titleColor: '#e0e6f0',
+      nodeBorder: '#6c8ef5',
+      mainBkg: '#252838',
+      nodeTextColor: '#e0e6f0',
+    },
+    flowchart: { curve: 'basis', padding: 20 }
+  });
+</script>
+</body>
+</html>

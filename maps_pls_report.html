@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PLS Map Environment Report — VANETSim</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg:        #0f1117;
+    --bg2:       #1a1d27;
+    --bg3:       #232738;
+    --accent:    #4f9eff;
+    --accent2:   #a78bfa;
+    --accent3:   #34d399;
+    --warn:      #fbbf24;
+    --red:       #f87171;
+    --text:      #e2e8f0;
+    --text-dim:  #94a3b8;
+    --border:    #2e3347;
+    --radius:    8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+  /* Layout */
+  .sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100vh; background: var(--bg2); border-right: 1px solid var(--border); overflow-y: auto; z-index: 100; padding: 20px 0; }
+  .sidebar h2 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim); padding: 0 20px 12px; }
+  .sidebar a { display: block; padding: 6px 20px; color: var(--text-dim); text-decoration: none; font-size: 0.82rem; border-left: 3px solid transparent; transition: all 0.15s; }
+  .sidebar a:hover, .sidebar a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(79,158,255,0.08); }
+  .sidebar .sub { padding-left: 32px; font-size: 0.78rem; }
+  main { margin-left: 260px; padding: 40px 48px; max-width: 1100px; }
+
+  /* Header */
+  .hero { background: linear-gradient(135deg, #1a1d27 0%, #0f1117 100%); border: 1px solid var(--border); border-radius: 12px; padding: 36px 40px; margin-bottom: 40px; }
+  .hero h1 { font-size: 1.9rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .hero p { color: var(--text-dim); font-size: 0.95rem; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; margin-right: 8px; }
+  .b-blue   { background: rgba(79,158,255,0.15); color: var(--accent); }
+  .b-purple { background: rgba(167,139,250,0.15); color: var(--accent2); }
+  .b-green  { background: rgba(52,211,153,0.15);  color: var(--accent3); }
+  .b-warn   { background: rgba(251,191,36,0.15);  color: var(--warn); }
+  .b-red    { background: rgba(248,113,113,0.15);  color: var(--red); }
+
+  /* Sections */
+  section { margin-bottom: 52px; }
+  h2.section-title { font-size: 1.35rem; font-weight: 700; color: #fff; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  h2.section-title .icon { font-size: 1.3rem; }
+  h3 { font-size: 1.05rem; font-weight: 600; color: var(--accent); margin: 24px 0 12px; }
+  h4 { font-size: 0.9rem; font-weight: 600; color: var(--accent2); margin: 16px 0 8px; }
+  p { color: var(--text); margin-bottom: 12px; font-size: 0.9rem; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+  thead { background: var(--bg3); }
+  th { padding: 10px 14px; text-align: left; color: var(--text-dim); font-weight: 600; letter-spacing: 0.04em; font-size: 0.75rem; text-transform: uppercase; }
+  td { padding: 9px 14px; border-top: 1px solid var(--border); color: var(--text); vertical-align: top; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  td code { background: rgba(79,158,255,0.12); padding: 1px 5px; border-radius: 3px; font-size: 0.82em; color: var(--accent); }
+
+  /* Code */
+  pre { background: #0a0c10; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; overflow-x: auto; margin: 12px 0; font-size: 0.82rem; line-height: 1.55; }
+  code { font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; }
+  pre code { color: #a9d1ff; }
+  .kw   { color: #ff79c6; }
+  .attr { color: #8be9fd; }
+  .val  { color: #f1fa8c; }
+  .cmt  { color: #6272a4; }
+
+  /* Cards */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 16px 0; }
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
+  .card .card-title { font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .card p { font-size: 0.82rem; color: var(--text-dim); margin: 0; }
+
+  /* Callout */
+  .callout { border-radius: var(--radius); padding: 14px 18px; margin: 16px 0; font-size: 0.87rem; display: flex; gap: 12px; align-items: flex-start; }
+  .callout.info  { background: rgba(79,158,255,0.08);  border-left: 3px solid var(--accent); }
+  .callout.warn  { background: rgba(251,191,36,0.08);  border-left: 3px solid var(--warn); }
+  .callout.green { background: rgba(52,211,153,0.08);  border-left: 3px solid var(--accent3); }
+  .callout .icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+  .callout p { margin: 0; color: var(--text); }
+
+  /* Diagram box */
+  .diagram-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin: 16px 0; overflow-x: auto; }
+  .ascii-art { font-family: 'Cascadia Code', Consolas, monospace; font-size: 0.82rem; color: var(--accent3); white-space: pre; line-height: 1.5; }
+
+  /* Highway diagram */
+  .highway-svg { width: 100%; max-width: 800px; margin: 20px auto; display: block; }
+
+  /* Vehicle role pills */
+  .veh-eavesdropper { background: rgba(248,113,113,0.15); color: var(--red); }
+  .veh-source       { background: rgba(79,158,255,0.15);  color: var(--accent); }
+  .veh-relay        { background: rgba(52,211,153,0.15);  color: var(--accent3); }
+  .veh-dest         { background: rgba(251,191,36,0.15);  color: var(--warn); }
+
+  /* File inventory */
+  .file-grid { display: grid; gap: 10px; margin: 16px 0; }
+  .file-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 12px 16px; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+  .file-item .fname { font-family: monospace; font-size: 0.82rem; color: var(--accent); }
+  .file-item .fdesc { font-size: 0.8rem; color: var(--text-dim); grid-column: 1 / -1; }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    main { margin-left: 0; padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <h2>PLS Map Report</h2>
+  <a href="#overview">Directory Overview</a>
+  <a href="#netbuild"  class="sub">Network Construction</a>
+  <a href="#compiled"  class="sub">Compiled Network</a>
+  <a href="#radio"     class="sub">Radio Config</a>
+  <a href="#routes">Vehicle Route Files</a>
+  <a href="#sumo-cfg" class="sub">SUMO Configs</a>
+  <a href="#launchd"  class="sub">Veins Launch Files</a>
+  <a href="#generators">Generator Scripts</a>
+  <a href="#topology">Topology Summary</a>
+  <a href="#pls">PLS Context</a>
+</nav>
+
+<main>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>PLS Map Environment Report</h1>
+  <p style="margin-bottom:14px;">Complete analysis of all files in <code>simulations/_maps/pls/</code> — the static geographic and traffic environment for the Chai et al. (2023) PLS replication.</p>
+  <span class="badge b-blue">SUMO Highway</span>
+  <span class="badge b-purple">IEEE 802.11p / 5.89 GHz</span>
+  <span class="badge b-green">1000m × 8 lanes</span>
+  <span class="badge b-warn">5 eavesdropper positions</span>
+  <span class="badge b-red">10 density/speed combos</span>
+</div>
+
+<!-- SECTION 1: OVERVIEW -->
+<section id="overview">
+  <h2 class="section-title"><span class="icon">📁</span> 1. Directory Overview & File Inventory</h2>
+  <p>Every OMNeT++ configuration in <code>omnetpp_5pos_full.ini</code> references files from this directory through its <code>launchd_*.xml</code> descriptor. The files break into four categories: network construction, vehicle traffic, simulation configuration, and utility scripts.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>File / Pattern</th><th>Count</th><th>Role</th><th>Used at Runtime?</th></tr></thead>
+      <tbody>
+        <tr><td><code>nodes.nod.xml</code></td><td>1</td><td>Junction coordinates — input to netconvert</td><td><span class="badge b-warn">Build only</span></td></tr>
+        <tr><td><code>edges.edg.xml</code></td><td>1</td><td>Road segment definitions — input to netconvert</td><td><span class="badge b-warn">Build only</span></td></tr>
+        <tr><td><code>connections.con.xml</code></td><td>1</td><td>Lane U-turn connections — input to netconvert</td><td><span class="badge b-warn">Build only</span></td></tr>
+        <tr><td><code>highway_medium.net.xml</code></td><td>1</td><td>Compiled SUMO road network — loaded by SUMO</td><td><span class="badge b-green">Runtime</span></td></tr>
+        <tr><td><code>config.xml</code></td><td>1</td><td>Veins radio propagation parameters</td><td><span class="badge b-green">Runtime</span></td></tr>
+        <tr><td><code>traffic_{N}veh_{speed}_rou.xml</code></td><td>10</td><td>Per-scenario vehicle routes (N∈{20,40,60,80,100})</td><td><span class="badge b-green">Runtime</span></td></tr>
+        <tr><td><code>simple_{N}veh_{speed}.sumo.cfg</code></td><td>10</td><td>SUMO simulation configuration per scenario</td><td><span class="badge b-green">Runtime</span></td></tr>
+        <tr><td><code>launchd_{N}veh_{speed}.xml</code></td><td>10</td><td>Veins launch descriptors (file list for SUMO)</td><td><span class="badge b-green">Runtime</span></td></tr>
+        <tr><td><code>analyze_all.py</code></td><td>1</td><td>Route file inspection utility</td><td><span class="badge b-blue">Dev tool</span></td></tr>
+        <tr><td><code>gen_80veh_fast_fix.py</code></td><td>1</td><td>Route generator — 80veh fast scenario</td><td><span class="badge b-blue">Dev tool</span></td></tr>
+        <tr><td><code>gen_80veh_reduced_gap.py</code></td><td>1</td><td>Alternate route generator — 80veh fast</td><td><span class="badge b-blue">Dev tool</span></td></tr>
+        <tr><td><strong>Total</strong></td><td><strong>37</strong></td><td colspan="2"></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SECTION 2: NETWORK CONSTRUCTION -->
+<section id="netbuild">
+  <h2 class="section-title"><span class="icon">🏗️</span> 2. Network Construction Files</h2>
+  <p>Three XML source files feed SUMO's <code>netconvert</code> tool to produce <code>highway_medium.net.xml</code>. They are <strong>not</strong> loaded at simulation runtime.</p>
+
+  <h3>2.1 nodes.nod.xml — Junction Coordinates</h3>
+  <pre><code><span class="kw">&lt;nodes&gt;</span>
+  <span class="kw">&lt;node</span> <span class="attr">id</span>=<span class="val">"start"</span> <span class="attr">x</span>=<span class="val">"0"</span>    <span class="attr">y</span>=<span class="val">"0"</span> <span class="attr">type</span>=<span class="val">"priority"</span><span class="kw">/&gt;</span>
+  <span class="kw">&lt;node</span> <span class="attr">id</span>=<span class="val">"end"</span>   <span class="attr">x</span>=<span class="val">"1000"</span> <span class="attr">y</span>=<span class="val">"0"</span> <span class="attr">type</span>=<span class="val">"priority"</span><span class="kw">/&gt;</span>
+<span class="kw">&lt;/nodes&gt;</span></code></pre>
+  <p>Exactly two junctions: <code>start</code> (0,0) at the west end and <code>end</code> (1000,0) at the east end. <code>type="priority"</code> means the vehicle already on the road has right-of-way — no traffic signals required.</p>
+
+  <h3>2.2 edges.edg.xml — Road Segment Definitions</h3>
+  <pre><code><span class="cmt">&lt;!-- Chai 2023: 8 lanes, 4 each direction, 1000m, 60 km/h max --&gt;</span>
+<span class="kw">&lt;edge</span> <span class="attr">id</span>=<span class="val">"edge_fwd"</span> <span class="attr">from</span>=<span class="val">"start"</span> <span class="attr">to</span>=<span class="val">"end"</span>
+      <span class="attr">numLanes</span>=<span class="val">"4"</span> <span class="attr">speed</span>=<span class="val">"16.67"</span> <span class="attr">spreadType</span>=<span class="val">"center"</span><span class="kw">/&gt;</span>
+<span class="kw">&lt;edge</span> <span class="attr">id</span>=<span class="val">"edge_bwd"</span> <span class="attr">from</span>=<span class="val">"end"</span>   <span class="attr">to</span>=<span class="val">"start"</span>
+      <span class="attr">numLanes</span>=<span class="val">"4"</span> <span class="attr">speed</span>=<span class="val">"16.67"</span> <span class="attr">spreadType</span>=<span class="val">"center"</span><span class="kw">/&gt;</span></code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Attribute</th><th>Value</th><th>Interpretation</th></tr></thead>
+      <tbody>
+        <tr><td><code>edge_fwd</code></td><td>start → end</td><td>Eastbound carriageway</td></tr>
+        <tr><td><code>edge_bwd</code></td><td>end → start</td><td>Westbound carriageway</td></tr>
+        <tr><td><code>numLanes</code></td><td>4</td><td>Four lanes per direction = 8 total (Chai Table 2)</td></tr>
+        <tr><td><code>speed</code></td><td>16.67 m/s</td><td>Speed limit = 60 km/h</td></tr>
+        <tr><td><code>spreadType</code></td><td>center</td><td>Lanes spread symmetrically around road centreline</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>2.3 connections.con.xml — U-Turn Connections</h3>
+  <p>All 4 lanes of <code>edge_fwd</code> connect to corresponding lanes of <code>edge_bwd</code> at the <code>end</code> junction, and vice versa at <code>start</code>. This creates bidirectional U-turns — vehicles bounce back and forth along the 1000m corridor indefinitely.</p>
+</section>
+
+<!-- SECTION 3: COMPILED NETWORK -->
+<section id="compiled">
+  <h2 class="section-title"><span class="icon">🗺️</span> 3. Compiled Network (highway_medium.net.xml)</h2>
+  <p>Generated by netconvert and loaded by SUMO at simulation time. Contains full geometric detail including internal U-turn edges at each junction.</p>
+
+  <!-- SVG Highway Diagram -->
+  <svg class="highway-svg" viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arr-e" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#4f9eff"/></marker>
+      <marker id="arr-w" markerWidth="8" markerHeight="8" refX="2" refY="3" orient="auto"><path d="M8,0 L8,6 L0,3 z" fill="#a78bfa"/></marker>
+    </defs>
+    <!-- Background -->
+    <rect x="0" y="0" width="760" height="200" fill="#1a1d27" rx="10"/>
+    <!-- Road -->
+    <rect x="50" y="50" width="660" height="100" fill="#2a2d3a" rx="4"/>
+    <!-- Lane dividers -->
+    <line x1="50" y1="100" x2="710" y2="100" stroke="#4b4f62" stroke-width="2" stroke-dasharray="12,8"/>
+    <line x1="50" y1="68"  x2="710" y2="68"  stroke="#3a3d50" stroke-width="1" stroke-dasharray="8,12"/>
+    <line x1="50" y1="83"  x2="710" y2="83"  stroke="#3a3d50" stroke-width="1" stroke-dasharray="8,12"/>
+    <line x1="50" y1="117" x2="710" y2="117" stroke="#3a3d50" stroke-width="1" stroke-dasharray="8,12"/>
+    <line x1="50" y1="132" x2="710" y2="132" stroke="#3a3d50" stroke-width="1" stroke-dasharray="8,12"/>
+    <!-- Direction arrows fwd -->
+    <line x1="120" y1="76" x2="580" y2="76" stroke="#4f9eff" stroke-width="1.5" marker-end="url(#arr-e)" opacity="0.8"/>
+    <!-- Direction arrows bwd -->
+    <line x1="580" y1="124" x2="120" y2="124" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arr-w)" opacity="0.8"/>
+    <!-- U-turn left -->
+    <path d="M60,55 Q20,100 60,145" fill="none" stroke="#4b4f62" stroke-width="2"/>
+    <!-- U-turn right -->
+    <path d="M700,55 Q740,100 700,145" fill="none" stroke="#4b4f62" stroke-width="2"/>
+    <!-- Labels -->
+    <text x="380" y="66" text-anchor="middle" fill="#4f9eff" font-size="12" font-family="monospace">edge_fwd (4 lanes, 16.67 m/s → eastbound)</text>
+    <text x="380" y="138" text-anchor="middle" fill="#a78bfa" font-size="12" font-family="monospace">edge_bwd (4 lanes, 16.67 m/s ← westbound)</text>
+    <!-- Nodes -->
+    <circle cx="50" cy="100" r="10" fill="#34d399" opacity="0.9"/>
+    <text x="50" y="170" text-anchor="middle" fill="#34d399" font-size="11" font-family="sans-serif">start (0,0)</text>
+    <circle cx="710" cy="100" r="10" fill="#fbbf24" opacity="0.9"/>
+    <text x="710" y="170" text-anchor="middle" fill="#fbbf24" font-size="11" font-family="sans-serif">end (1000,0)</text>
+    <!-- Scale -->
+    <line x1="50" y1="188" x2="710" y2="188" stroke="#6272a4" stroke-width="1"/>
+    <text x="380" y="199" text-anchor="middle" fill="#6272a4" font-size="10">1000 m</text>
+  </svg>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title">Road Length</div>
+      <p>1000 m total corridor (x=0 to x=1000). Internal junction geometry adds ≈0.04 m.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Lane Configuration</div>
+      <p>4 lanes per direction = 8 total. Lateral offsets ±1.60m to ±11.20m from centreline (~3.2m per lane).</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Junction Type</div>
+      <p>U-turn junctions at both ends. Internal edges <code>:end_0</code>, <code>:start_0</code> model realistic deceleration (speed 3.65–8.18 m/s, length 18.69 m).</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Coordinate System</div>
+      <p>Axis-aligned, y=0. OMNeT++ playground (2000m×500m) is larger than road to prevent boundary artefacts.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 4: RADIO CONFIG -->
+<section id="radio">
+  <h2 class="section-title"><span class="icon">📡</span> 4. Radio Configuration (config.xml)</h2>
+  <p>This Veins XML file configures the physical-layer propagation stack used by <em>every</em> vehicle's NIC. It is the direct bridge between SUMO geometry and the PLS secrecy capacity formula.</p>
+
+  <pre><code><span class="kw">&lt;root&gt;</span>
+  <span class="kw">&lt;AnalogueModels&gt;</span>
+    <span class="cmt">&lt;!-- Open highway waveguide — alpha=1.8 lower than free-space 2.0 --&gt;</span>
+    <span class="kw">&lt;AnalogueModel</span> <span class="attr">type</span>=<span class="val">"SimplePathlossModel"</span><span class="kw">&gt;</span>
+      <span class="kw">&lt;parameter</span> <span class="attr">name</span>=<span class="val">"alpha"</span>            <span class="attr">value</span>=<span class="val">"1.8"</span><span class="kw">/&gt;</span>
+      <span class="kw">&lt;parameter</span> <span class="attr">name</span>=<span class="val">"carrierFrequency"</span> <span class="attr">value</span>=<span class="val">"5.890e+9"</span><span class="kw">/&gt;</span>
+    <span class="kw">&lt;/AnalogueModel&gt;</span>
+    <span class="cmt">&lt;!-- Ground reflection — DielectricConstant=3.0 (dry asphalt) --&gt;</span>
+    <span class="kw">&lt;AnalogueModel</span> <span class="attr">type</span>=<span class="val">"TwoRayInterferenceModel"</span><span class="kw">&gt;</span>
+      <span class="kw">&lt;parameter</span> <span class="attr">name</span>=<span class="val">"DielectricConstant"</span> <span class="attr">value</span>=<span class="val">"3.0"</span><span class="kw">/&gt;</span>
+    <span class="kw">&lt;/AnalogueModel&gt;</span>
+  <span class="kw">&lt;/AnalogueModels&gt;</span>
+  <span class="kw">&lt;Decider</span> <span class="attr">type</span>=<span class="val">"Decider80211p"</span><span class="kw">&gt;</span>
+    <span class="kw">&lt;parameter</span> <span class="attr">name</span>=<span class="val">"centerFrequency"</span> <span class="attr">value</span>=<span class="val">"5.890e9"</span><span class="kw">/&gt;</span>
+  <span class="kw">&lt;/Decider&gt;</span>
+<span class="kw">&lt;/root&gt;</span></code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Model</th><th>Parameter</th><th>Value</th><th>PLS Significance</th></tr></thead>
+      <tbody>
+        <tr><td>SimplePathlossModel</td><td><code>alpha</code></td><td>1.8</td><td>Lower than free-space (2.0) → slower signal decay → wider interference range for eavesdropper</td></tr>
+        <tr><td>SimplePathlossModel</td><td><code>carrierFrequency</code></td><td>5.89 GHz</td><td>λ=0.05085m — matches <code>UFRPLS_WAVELENGTH</code> constant in routing code</td></tr>
+        <tr><td>TwoRayInterferenceModel</td><td><code>DielectricConstant</code></td><td>3.0</td><td>Dry asphalt surface — models ground reflection creating SNR dips at specific distances</td></tr>
+        <tr><td>Decider80211p</td><td><code>centerFrequency</code></td><td>5.89 GHz</td><td>DSRC channel; determines packet-level reception from SNR</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout info">
+    <span class="icon">ℹ️</span>
+    <p><strong>PLS connection:</strong> These propagation parameters feed directly into the CS formula <code>CS<sub>ij</sub> = max(C<sub>ij</sub> − C<sub>ie</sub>, 0)</code> where <code>C = log₂(1 + P<sub>t</sub>·(λ/4πd)² / σ²)</code>. With <code>P<sub>t</sub>=10 mW</code>, <code>λ=0.0509 m</code>, and <code>σ²=−95 dBm</code>, the 200m communication range follows directly from <code>α=1.8</code>.</p>
+  </div>
+</section>
+
+<!-- SECTION 5: ROUTE FILES -->
+<section id="routes">
+  <h2 class="section-title"><span class="icon">🚗</span> 5. Vehicle Route Files (.rou.xml)</h2>
+  <p>Ten route files define the vehicle population for each combination of density × speed regime. All share the same four-role structure.</p>
+
+  <h3>5.1 Vehicle Roles & Types</h3>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title"><span class="badge b-red">Eavesdropper</span> vehicle00</div>
+      <p>type_eavesdropper (red). Passive listener — no routing module. departPos=900m (default). Position is overridden per experiment by the Python runner.</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="badge b-blue">Source</span> vehicle01</div>
+      <p>type_source (blue). Runs UFRPLS or GPSRCS. Generates UDP packets at 4 pkt/s toward destination. departPos=50m, route_east.</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="badge b-green">Relay</span> vehicle[2..N-2]</div>
+      <p>type_legitimate (green). Runs routing protocol — forwards packets, computes CS per hop. Distributed across full highway.</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="badge b-warn">Destination</span> vehicle[N-1]</div>
+      <p>type_dest (orange). Receives packets, counts PDR. departPos=50m, route_west (opposite direction to source).</p>
+    </div>
+  </div>
+
+  <h3>5.2 Physical Vehicle Parameters (all types)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Attribute</th><th>Slow (40–60 km/h)</th><th>Fast (80–120 km/h)</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>accel</code></td><td>2.6 m/s²</td><td>2.6 m/s²</td><td>Maximum acceleration</td></tr>
+        <tr><td><code>decel</code></td><td>4.5 m/s²</td><td>4.5 m/s²</td><td>Maximum braking deceleration</td></tr>
+        <tr><td><code>sigma</code></td><td>0.5</td><td>0.5</td><td>Driver imperfection — creates speed heterogeneity</td></tr>
+        <tr><td><code>length</code></td><td>5 m</td><td>5 m</td><td>Vehicle body length</td></tr>
+        <tr><td><code>minGap</code></td><td>2.5 m</td><td>2.5 m</td><td>Minimum clearance to predecessor</td></tr>
+        <tr><td><code>maxSpeed</code></td><td>16.67 m/s</td><td>33.33 m/s</td><td>Speed limit (60 / 120 km/h)</td></tr>
+        <tr><td>Route laps</td><td>8 edges (4 laps)</td><td>16 edges (8 laps)</td><td>Total route length to survive full sim</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>5.3 Eavesdropper Gap Design</h3>
+  <div class="callout warn">
+    <span class="icon">⚠️</span>
+    <p>A deliberate gap in relay positions exists around the eavesdropper's departure position in every route file. This prevents SUMO collision detection failures that would occur if a relay vehicle occupied the same initial position as vehicle00.</p>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Scenario</th><th>Eavesdropper departPos</th><th>Gap Range</th><th>Gap Size</th></tr></thead>
+      <tbody>
+        <tr><td>20veh (any speed)</td><td>900 m</td><td>850m → 950m</td><td>~100 m</td></tr>
+        <tr><td>40veh slow</td><td>900 m</td><td>875m → 925m</td><td>~50 m</td></tr>
+        <tr><td>100veh slow</td><td>900 m</td><td>890m → 920m</td><td>~30 m</td></tr>
+        <tr><td>80veh fast (gen script)</td><td>500 m</td><td>470m → 510m</td><td>~30 m</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>5.4 Vehicle Density Comparison</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>N</th><th>Relay count</th><th>Avg. relay spacing</th><th>Min CS diversity</th></tr></thead>
+      <tbody>
+        <tr><td>20</td><td>18</td><td>~100 m</td><td>Low — sparse relays, large gaps</td></tr>
+        <tr><td>40</td><td>38</td><td>~50 m</td><td>Moderate</td></tr>
+        <tr><td>60</td><td>58</td><td>~33 m</td><td>Good</td></tr>
+        <tr><td>80</td><td>78</td><td>~22 m</td><td>High</td></tr>
+        <tr><td>100</td><td>98</td><td>~18 m</td><td>Highest — many relay options per hop</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SECTION 6: SUMO CFG -->
+<section id="sumo-cfg">
+  <h2 class="section-title"><span class="icon">⚙️</span> 6. SUMO Configuration Files (.sumo.cfg)</h2>
+  <p>One file per (N, speed) scenario. References the shared network and the scenario-specific route file.</p>
+  <pre><code><span class="kw">&lt;configuration&gt;</span>
+  <span class="kw">&lt;input&gt;</span>
+    <span class="kw">&lt;net-file</span>    <span class="attr">value</span>=<span class="val">"highway_medium.net.xml"</span><span class="kw">/&gt;</span>   <span class="cmt">&lt;!-- shared --&gt;</span>
+    <span class="kw">&lt;route-files</span> <span class="attr">value</span>=<span class="val">"traffic_20veh_40-60kmh.rou.xml"</span><span class="kw">/&gt;</span>
+  <span class="kw">&lt;/input&gt;</span>
+  <span class="kw">&lt;time&gt;</span>
+    <span class="kw">&lt;begin</span>       <span class="attr">value</span>=<span class="val">"0"</span><span class="kw">/&gt;</span>
+    <span class="kw">&lt;end</span>         <span class="attr">value</span>=<span class="val">"1000"</span><span class="kw">/&gt;</span>   <span class="cmt">&lt;!-- OMNeT++ stops via TraCI at ~260s --&gt;</span>
+    <span class="kw">&lt;step-length</span> <span class="attr">value</span>=<span class="val">"0.1"</span><span class="kw">/&gt;</span>  <span class="cmt">&lt;!-- 10 Hz mobility updates --&gt;</span>
+  <span class="kw">&lt;/time&gt;</span>
+  <span class="kw">&lt;remote-port</span> <span class="attr">value</span>=<span class="val">"62189"</span><span class="kw">/&gt;</span>  <span class="cmt">&lt;!-- standalone GUI port --&gt;</span>
+  <span class="kw">&lt;seed</span>        <span class="attr">value</span>=<span class="val">"0"</span><span class="kw">/&gt;</span>
+  <span class="kw">&lt;random</span>      <span class="attr">value</span>=<span class="val">"false"</span><span class="kw">/&gt;</span>
+<span class="kw">&lt;/configuration&gt;</span></code></pre>
+  <p>The <code>end=1000</code> value is a safety maximum — OMNeT++ terminates the SUMO process via TraCI well before this, at the configured simulation end time (~260 s). The Python runner overrides the <code>seed</code> by passing <code>--seed-set</code> as an argument to SUMO.</p>
+</section>
+
+<!-- SECTION 7: LAUNCHD -->
+<section id="launchd">
+  <h2 class="section-title"><span class="icon">🚀</span> 7. Veins Launch Descriptor Files</h2>
+  <p>The <code>launchd_*.xml</code> files are read by <code>VeinsInetManager</code> and executed by <code>sumo-launchd.py</code> to start the correct SUMO process for each OMNeT++ configuration.</p>
+  <pre><code><span class="kw">&lt;launch&gt;</span>
+  <span class="kw">&lt;copy</span> <span class="attr">file</span>=<span class="val">"C:\...\highway_medium.net.xml"</span><span class="kw">/&gt;</span>
+  <span class="kw">&lt;copy</span> <span class="attr">file</span>=<span class="val">"C:\...\traffic_20veh_40-60kmh_rou.xml"</span><span class="kw">/&gt;</span>
+  <span class="kw">&lt;copy</span> <span class="attr">file</span>=<span class="val">"C:\...\simple_20veh_40-60kmh.sumo.cfg"</span> <span class="attr">type</span>=<span class="val">"config"</span><span class="kw">/&gt;</span>
+<span class="kw">&lt;/launch&gt;</span></code></pre>
+
+  <div class="callout green">
+    <span class="icon">✅</span>
+    <p><strong>Execution flow:</strong> VeinsInetManager reads the launchd file → sumo-launchd.py copies all files to a temp directory → starts SUMO with the <code>type="config"</code> file → opens TraCI port 9999 → OMNeT++ connects and sends mobility commands each 0.1 s step.</p>
+  </div>
+</section>
+
+<!-- SECTION 8: GENERATORS -->
+<section id="generators">
+  <h2 class="section-title"><span class="icon">🔧</span> 8. Route Generator Scripts</h2>
+
+  <h3>analyze_all.py — Route Inspection Utility</h3>
+  <p>Globs all <code>traffic_*_rou.xml</code> files, parses vehicle positions, speeds, and lane assignments. Reports:</p>
+  <ul style="margin-left:20px; font-size:0.87rem; color:var(--text);">
+    <li>Eavesdropper gap boundaries (nearest relays before/after vehicle00)</li>
+    <li>Average and maximum inter-relay spacing</li>
+    <li><strong>Braking safety check:</strong> if <code>pos + v²/(2×4.5) &gt; 1000m</code> → UNSAFE (vehicle cannot stop before junction)</li>
+  </ul>
+  <p style="margin-top:10px;">Output is console text only. Run from <code>_maps/pls/</code> after any route file change.</p>
+
+  <h3>gen_80veh_fast_fix.py — 80-Vehicle Fast Route Generator</h3>
+  <p>Generates <code>traffic_80veh_80-120kmh_rou.xml</code> with a carefully designed eavesdropper gap:</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Eavesdropper position</td><td>500.0 m (midpoint)</td></tr>
+        <tr><td>Gap</td><td>470m → 510m (~30m clear zone)</td></tr>
+        <tr><td>Eastbound relays</td><td>17 before gap (113–470m) + 21 after (510–935m)</td></tr>
+        <tr><td>Westbound relays</td><td>17 before + 22 after</td></tr>
+        <tr><td>Boundary speed cap</td><td>≥915m: 22.22 m/s max; ≥880m: 25.0 m/s max</td></tr>
+        <tr><td>Lane assignment</td><td><code>lane = i % 4</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>gen_80veh_reduced_gap.py — Alternate Generator</h3>
+  <p>Alternative variant with slightly different speed pool generation logic. Both output to the same <code>traffic_80veh_80-120kmh_rou.xml</code>. Represents iteration on the route design — <code>gen_80veh_fast_fix.py</code> is the cleaner, current version.</p>
+</section>
+
+<!-- SECTION 9: TOPOLOGY SUMMARY -->
+<section id="topology">
+  <h2 class="section-title"><span class="icon">🗺️</span> 9. Network Topology & Traffic Flow Summary</h2>
+
+  <h3>9.1 Vehicle Placement (20-vehicle example)</h3>
+  <div class="diagram-box">
+    <div class="ascii-art">
+Position: 0m      50m    150  250  350  450  550  650  750  850  900m   1000m
+          │        │      ↓    ↓    ↓    ↓    ↓    ↓    ↓    ↓    │      │
+ East →   │  start  src  R02  R03  R04  R05  R06  R07  R08  R09  EVE  [end]
+ West ←   │  start  dst  R10  R11  R12  R13  R14  R15  R16  R17  R18  [end]
+          │        │
+Legend: src=vehicle01(source) dst=vehicle19(dest) EVE=vehicle00(eavesdropper) R=relay
+    </div>
+  </div>
+
+  <h3>9.2 Speed Regime Comparison</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Parameter</th><th>Slow (40–60 km/h)</th><th>Fast (80–120 km/h)</th></tr></thead>
+      <tbody>
+        <tr><td>maxSpeed</td><td>16.67 m/s (60 km/h)</td><td>33.33 m/s (120 km/h)</td></tr>
+        <tr><td>Departure speeds</td><td>11.11–16.67 m/s</td><td>22.22–33.33 m/s</td></tr>
+        <tr><td>Route laps in 260s</td><td>~4 laps</td><td>~8 laps</td></tr>
+        <tr><td>Beacon staleness</td><td>Low</td><td>Higher</td></tr>
+        <tr><td>CS temporal variability</td><td>Lower</td><td>Higher</td></tr>
+        <tr><td>UFRPLS wait impact</td><td>More patience feasible</td><td>Less tolerance for tw₁/T delays</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>9.3 File Dependency Chain</h3>
+  <div class="diagram-box">
+    <div class="mermaid" style="background:transparent;">
+graph LR
+    A[nodes.nod.xml] --> NC[netconvert]
+    B[edges.edg.xml] --> NC
+    C[connections.con.xml] --> NC
+    NC --> NET[highway_medium.net.xml]
+    ROU[traffic_Nveh_speed_rou.xml]
+    CFG[simple_Nveh_speed.sumo.cfg]
+    NET --> CFG
+    ROU --> CFG
+    CFG --> LD[launchd_Nveh_speed.xml]
+    LD --> VIM[VeinsInetManager]
+    NET --> LD
+    ROU --> LD
+    style NET fill:#1a3a5c,color:#4f9eff
+    style VIM fill:#1a3a3a,color:#34d399
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 10: PLS CONTEXT -->
+<section id="pls">
+  <h2 class="section-title"><span class="icon">🔐</span> 10. PLS Context Relevance</h2>
+
+  <h3>10.1 Why a 1000m Linear Highway?</h3>
+  <div class="callout green">
+    <span class="icon">✅</span>
+    <p><strong>Predictable LOS geometry:</strong> On a straight highway, distance d<sub>ij</sub> between vehicles is purely a function of longitudinal position. There are no corner effects, occlusions, or building scattering. This makes the secrecy capacity formula CS<sub>ij</sub> = max(C<sub>ij</sub> − C<sub>ie</sub>, 0) geometrically interpretable and replicates Chai et al.'s Monte Carlo idealised model.</p>
+  </div>
+
+  <h3>10.2 Four-Lane Configuration and PLS</h3>
+  <p>The 4-lane design creates <strong>lateral distance diversity</strong> relevant to CS:</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Lane</th><th>Offset from centreline</th><th>Effect on d<sub>ie</sub></th></tr></thead>
+      <tbody>
+        <tr><td>Lane 0 (outermost)</td><td>±11.20 m</td><td>Largest d<sub>ie</sub> → lower C<sub>ie</sub> → higher CS possible</td></tr>
+        <tr><td>Lane 1</td><td>±8.00 m</td><td></td></tr>
+        <tr><td>Lane 2</td><td>±4.80 m</td><td></td></tr>
+        <tr><td>Lane 3 (innermost)</td><td>±1.60 m</td><td>Smallest d<sub>ie</sub> → higher C<sub>ie</sub> → lower CS</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>This lateral variation is captured in the <code>stddev</code> field of the <code>secrecyCapacity</code> statistic in result .sca files.</p>
+
+  <h3>10.3 Eavesdropper Position Scanning</h3>
+  <p>The Python runner patches vehicle00's <code>departPos</code> in the route XML before each run:</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Tag</th><th>departPos</th><th>Physical Scenario</th></tr></thead>
+      <tbody>
+        <tr><td><code>e100</code></td><td>100 m</td><td>Near source — impacts early hops most</td></tr>
+        <tr><td><code>e300</code></td><td>300 m</td><td>30% along highway</td></tr>
+        <tr><td><code>e500</code></td><td>500 m</td><td>Midpoint — worst-case, affects most relay segments</td></tr>
+        <tr><td><code>e700</code></td><td>700 m</td><td>70% along highway</td></tr>
+        <tr><td><code>e900</code></td><td>900 m</td><td>Near destination — impacts last hop most</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Averaging over all 5 positions yields the <strong>expected secrecy capacity</strong> independent of eavesdropper location — matching Chai et al.'s Monte Carlo averaging.</p>
+
+  <h3>10.4 U-Turn Topology and CS Stationarity</h3>
+  <div class="callout info">
+    <span class="icon">ℹ️</span>
+    <p>The U-turn design keeps all vehicles circulating for the full 260-second simulation. After the initial ~20–30 s transient, σ=0.5 driver imperfection disperses vehicles into pseudo-random positions. CS samples from t=10s to t=260s therefore represent a realistic geometric distribution — not just the artificial initial uniform spacing. 1000 packets (4 pkt/s × 250 s) provide statistically robust per-scenario CS means.</p>
+  </div>
+
+  <h3>10.5 Relay Gap and Worst-Case CS</h3>
+  <div class="diagram-box">
+    <div class="ascii-art">
+WITHOUT gap (would be a bug):
+  relay@895m ──5m──▶ EVE@900m ◀──5m── relay@905m
+  d_ie = 5m → C_ie = very high → CS ≈ 0 for both neighbours → protocol severely degraded
+
+WITH gap (correct design):
+  relay@850m ─────50m────▶ EVE@900m ◀────50m───── relay@950m
+  d_ie = 50m → C_ie = moderate → CS > 0 possible → realistic protocol comparison
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: { primaryColor: '#1a3a5c', primaryTextColor: '#4f9eff', lineColor: '#4b4f62', background: '#1a1d27' }});
+
+// Sidebar scroll tracking
+const links = document.querySelectorAll('.sidebar a[href^="#"]');
+const sections = [...links].map(l => document.querySelector(l.getAttribute('href'))).filter(Boolean);
+window.addEventListener('scroll', () => {
+  let cur = sections[0];
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) cur = s; });
+  links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + cur.id));
+});
+</script>
+</body>
+</html>
